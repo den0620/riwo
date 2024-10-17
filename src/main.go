@@ -101,6 +101,7 @@ func createDraggableWindow(this js.Value, args []js.Value) interface{} {
   return nil
 }
 
+
 func initializeContextMenu() {
   document := js.Global().Get("document")
   body := document.Get("body")
@@ -108,7 +109,7 @@ func initializeContextMenu() {
   // Create the context menu
   menu := document.Call("createElement", "div")
   menu.Set("id", "contextMenu")
-  menu.Set("style", "position: absolute; display: none; background-color: #ffffff; border: 1px solid #333333; padding: 5px;")
+  menu.Set("style", "position: absolute; display: none; background-color: #EEFFEE; border: solid #8BCE8B; padding: 0;")
   body.Call("appendChild", menu)
 
   // Add 'Move' option to the context menu
@@ -116,9 +117,15 @@ func initializeContextMenu() {
   moveOption.Set("innerText", "Move")
   moveOption.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto") // Set cursor on hover over "Move" option
 
-  // Hover event for moveOption to set cursor
+  // Set background for hover or selected state
   moveOption.Call("addEventListener", "mouseover", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+    moveOption.Get("style").Set("background-color", "#418941")
     moveOption.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
+    return nil
+  }))
+
+  moveOption.Call("addEventListener", "mouseout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+    moveOption.Get("style").Set("background-color", "#EEFFEE") // Revert to original color
     return nil
   }))
 
@@ -167,3 +174,5 @@ func initializeContextMenu() {
     return nil
   }))
 }
+
+
