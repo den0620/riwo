@@ -10,6 +10,7 @@ var (
   isMovingMode bool
   startX, startY float64
   activeWindow   js.Value
+  ghostWindow    js.Value
 )
 
 func main() {
@@ -22,15 +23,12 @@ Then you are likely to want to know this:
 - Select option by pressing RMB
 - Click LMB to cancel
 - Choose window with RMB
-- Hold RMB to drag aroung in "move" mode
+- Hold RMB to drag around in "move" mode
 - Make selection with RMB in "resize" mode
 Logging is included
 `)
 
-  // Set up the main function for window creation
   js.Global().Set("createDraggableWindow", js.FuncOf(createDraggableWindow))
-
-  // Initialize the context menu
   initializeContextMenu()
 
   <-c
@@ -49,7 +47,6 @@ func createDraggableWindow(this js.Value, args []js.Value) interface{} {
   window.Get("style").Set("left", "100px")
   window.Get("style").Set("top", "100px")
 
-  // Add window to body
   body.Call("appendChild", window)
 
   // Prevent default context menu on right-click for the draggable window
@@ -62,27 +59,38 @@ func createDraggableWindow(this js.Value, args []js.Value) interface{} {
 
   // Mouse down event for window selection (only if "Move" is active)
   window.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    if isMovingMode && args[0].Get("button").Int() == 2 { // Only right mouse button (button 2)
-      args[0].Call("preventDefault") // Block default right-click behavior
+    if isMovingMode && args[0].Get("button").Int() == 2 {
+      args[0].Call("preventDefault")
       args[0].Call("stopPropagation")
       activeWindow = window
       startX = args[0].Get("clientX").Float() - window.Get("offsetLeft").Float()
       startY = args[0].Get("clientY").Float() - window.Get("offsetTop").Float()
       isDragging = true
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-drag.svg), auto") // Drag cursor
-      fmt.Println("Dragging initiated.")
+
+      // Create and style the ghost window to match the parent window's size and border
+      ghostWindow = document.Call("createElement", "div")
+      rect := window.Call("getBoundingClientRect")
+      width := rect.Get("width").Float()
+      height := rect.Get("height").Float()
+      ghostWindow.Set("style", fmt.Sprintf("position: absolute; width: %fpx; height: %fpx; border: solid 2px #FF0000; pointer-events: none;",
+        width, height))
+      ghostWindow.Get("style").Set("left", fmt.Sprintf("%fpx", window.Get("offsetLeft").Float()))
+      ghostWindow.Get("style").Set("top", fmt.Sprintf("%fpx", window.Get("offsetTop").Float()))
+      body.Call("appendChild", ghostWindow)
+
+      fmt.Println("Dragging initiated with ghost window.")
     }
     return nil
   }))
 
   // Global mouse move event
   js.Global().Get("document").Call("addEventListener", "mousemove", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    if isDragging && isMovingMode && activeWindow.Truthy() {
+    if isDragging && isMovingMode && ghostWindow.Truthy() {
       x := args[0].Get("clientX").Float() - startX
       y := args[0].Get("clientY").Float() - startY
-      activeWindow.Get("style").Set("left", fmt.Sprintf("%fpx", x))
-      activeWindow.Get("style").Set("top", fmt.Sprintf("%fpx", y))
-      fmt.Println("Window is moving.")
+      ghostWindow.Get("style").Set("left", fmt.Sprintf("%fpx", x))
+      ghostWindow.Get("style").Set("top", fmt.Sprintf("%fpx", y))
+      fmt.Println("Ghost window is moving.")
     }
     return nil
   }))
@@ -93,7 +101,15 @@ func createDraggableWindow(this js.Value, args []js.Value) interface{} {
       isDragging = false
       isMovingMode = false
       js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto") // Revert cursor to default
-      fmt.Println("Dragging ended.")
+
+      // Move the actual window to the ghost position
+      if ghostWindow.Truthy() && activeWindow.Truthy() {
+        activeWindow.Get("style").Set("left", ghostWindow.Get("style").Get("left"))
+        activeWindow.Get("style").Set("top", ghostWindow.Get("style").Get("top"))
+        ghostWindow.Call("remove") // Remove ghost window
+      }
+
+      fmt.Println("Dragging ended and window teleported to ghost position.")
     }
     return nil
   }))
@@ -101,23 +117,19 @@ func createDraggableWindow(this js.Value, args []js.Value) interface{} {
   return nil
 }
 
-
 func initializeContextMenu() {
   document := js.Global().Get("document")
   body := document.Get("body")
 
-  // Create the context menu
   menu := document.Call("createElement", "div")
   menu.Set("id", "contextMenu")
   menu.Set("style", "position: absolute; display: none; background-color: #EEFFEE; border: solid #8BCE8B; padding: 0;")
   body.Call("appendChild", menu)
 
-  // Add 'Move' option to the context menu
   moveOption := document.Call("createElement", "div")
   moveOption.Set("innerText", "Move")
-  moveOption.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto") // Set cursor on hover over "Move" option
+  moveOption.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
 
-  // Set background for hover or selected state
   moveOption.Call("addEventListener", "mouseover", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
     moveOption.Get("style").Set("background-color", "#418941")
     moveOption.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
@@ -125,11 +137,10 @@ func initializeContextMenu() {
   }))
 
   moveOption.Call("addEventListener", "mouseout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    moveOption.Get("style").Set("background-color", "#EEFFEE") // Revert to original color
+    moveOption.Get("style").Set("background-color", "#EEFFEE")
     return nil
   }))
 
-  // Prevent default context menu on right-click for the move option
   moveOption.Call("addEventListener", "contextmenu", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
     args[0].Call("preventDefault")
     args[0].Call("stopPropagation")
@@ -137,35 +148,31 @@ func initializeContextMenu() {
     return nil
   }))
 
-  // Select 'Move' option
   moveOption.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    if args[0].Get("button").Int() == 2 { // Only right mouse button
-      args[0].Call("preventDefault") // Block default right-click behavior
+    if args[0].Get("button").Int() == 2 {
+      args[0].Call("preventDefault")
       args[0].Call("stopPropagation")
       isMovingMode = true
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto") // Select cursor
-      menu.Get("style").Set("display", "none") // Hide menu after selecting 'Move'
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
+      menu.Get("style").Set("display", "none")
       fmt.Println("Move mode activated.")
     }
     return nil
   }))
   menu.Call("appendChild", moveOption)
 
-  // Hide menu on clicking outside and reset moving mode
   document.Call("addEventListener", "click", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
     menu.Get("style").Set("display", "none")
     isMovingMode = false
-    js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto") // Revert cursor to default
+    js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
     fmt.Println("Context menu hidden, Move mode deactivated.")
     return nil
   }))
 
-  // Right-click on background to open the menu (only if not in moving mode)
   body.Call("addEventListener", "contextmenu", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    args[0].Call("preventDefault") // Prevent the default context menu on right-click
+    args[0].Call("preventDefault")
     args[0].Call("stopPropagation")
     if !isMovingMode {
-      // Position the custom context menu
       menu.Get("style").Set("left", fmt.Sprintf("%fpx", args[0].Get("clientX").Float()))
       menu.Get("style").Set("top", fmt.Sprintf("%fpx", args[0].Get("clientY").Float()))
       menu.Get("style").Set("display", "block")
@@ -174,5 +181,4 @@ func initializeContextMenu() {
     return nil
   }))
 }
-
 
