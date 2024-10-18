@@ -72,7 +72,7 @@ func createDraggableWindow(this js.Value, args []js.Value) interface{} {
       rect := window.Call("getBoundingClientRect")
       width := rect.Get("width").Float()
       height := rect.Get("height").Float()
-      ghostWindow.Set("style", fmt.Sprintf("position: absolute; width: %fpx; height: %fpx; border: solid 2px #FF0000; pointer-events: none;",
+      ghostWindow.Set("style", fmt.Sprintf("position: absolute; width: %fpx; height: %fpx; border: solid 2px #FF0000; cursor: url(assets/cursor-drag.svg), auto;",
         width, height))
       ghostWindow.Get("style").Set("left", fmt.Sprintf("%fpx", window.Get("offsetLeft").Float()))
       ghostWindow.Get("style").Set("top", fmt.Sprintf("%fpx", window.Get("offsetTop").Float()))
