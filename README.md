@@ -7,9 +7,9 @@ hardly inspired by Plan 9's [Rio](https://9p.io/wiki/plan9/using_rio/index.html)
 
 ## Roadmap
 
-- [ ] New (not planned)
+- [x] New
 - [ ] Resize
 - [x] Move
-- [ ] Delete (not planned)
+- [ ] Delete
 - [ ] Hide
 
