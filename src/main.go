@@ -12,6 +12,7 @@ var (
   isResizingMode bool
   isResizingInit bool
   justSelected   bool
+  isDeleteMode   bool
   startX, startY float64
   activeWindow   js.Value
   ghostWindow    js.Value
@@ -45,8 +46,8 @@ Logging is included
 }
 
 func initializeGlobalMouseEvents() {
-  // Global mouse move event
   js.Global().Get("document").Call("addEventListener", "mousemove", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+    // Global mouse move event
     if isDragging && isMovingMode && ghostWindow.Truthy() {
       x := args[0].Get("clientX").Float() - startX
       y := args[0].Get("clientY").Float() - startY
@@ -54,32 +55,8 @@ func initializeGlobalMouseEvents() {
       ghostWindow.Get("style").Set("top", fmt.Sprintf("%fpx", y))
       fmt.Println("Ghost window is moving.")
     }
-    return nil
-  }))
 
-  // Global mouse up event to stop dragging
-  js.Global().Get("document").Call("addEventListener", "mouseup", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    if isMovingMode && isDragging {
-      isDragging = false
-      isMovingMode = false
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
-
-      // Move the window to the ghost's position
-      if ghostWindow.Truthy() && activeWindow.Truthy() {
-        activeWindow.Get("style").Set("left", ghostWindow.Get("style").Get("left"))
-        activeWindow.Get("style").Set("top", ghostWindow.Get("style").Get("top"))
-        ghostWindow.Call("remove") // Remove ghost window
-      }
-
-      fmt.Println("Dragging ended and window teleported to ghost position.")
-    }
-    return nil
-  }))
-
-  //
-
-  // Global mouse move event to adjust ghost window size during resizing
-  js.Global().Get("document").Call("addEventListener", "mousemove", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+    // Global mouse move event to adjust ghost window size during resizing
     if ghostWindow.Truthy() && isResizingMode && isResizingInit && isDragging && !isMovingMode {
       currentX := args[0].Get("clientX").Float()
       currentY := args[0].Get("clientY").Float()
@@ -104,8 +81,24 @@ func initializeGlobalMouseEvents() {
     return nil
   }))
 
-  // Global mouse up event to finalize resizing and apply to window
   js.Global().Get("document").Call("addEventListener", "mouseup", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+    // Global mouse up event to stop dragging
+    if isMovingMode && isDragging {
+      isDragging = false
+      isMovingMode = false
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+
+      // Move the window to the ghost's position
+      if ghostWindow.Truthy() && activeWindow.Truthy() {
+        activeWindow.Get("style").Set("left", ghostWindow.Get("style").Get("left"))
+        activeWindow.Get("style").Set("top", ghostWindow.Get("style").Get("top"))
+        ghostWindow.Call("remove") // Remove ghost window
+      }
+
+      fmt.Println("Dragging ended and window teleported to ghost position.")
+    }
+
+    // Global mouse up event to finalize resizing and apply to window
     if ghostWindow.Truthy() && activeWindow.Truthy() && isResizingMode && isResizingInit && isDragging && !isMovingMode {
       // Apply the ghost window's size and position to the actual window
       activeWindow.Get("style").Set("left", ghostWindow.Get("style").Get("left"))
@@ -169,7 +162,7 @@ func createDraggableWindow(this js.Value, args []js.Value) interface{} {
   window.Call("addEventListener", "contextmenu", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
     args[0].Call("preventDefault")
     //args[0].Call("stopPropagation")
-    fmt.Println("Context menu prevented on draggable window.")
+    fmt.Println("Caught click on window")
     // Bring window to the front
     if !isResizingInit {
       highestZIndex++
@@ -178,8 +171,21 @@ func createDraggableWindow(this js.Value, args []js.Value) interface{} {
     return nil
   }))
 
-  // Mouse down event for selecting and dragging the window (Left-click brings it to front)
   window.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+    // Right-click (RMB) on the window to select it for resizing, second right-click activates resizing
+    if isResizingMode && !isResizingInit && args[0].Get("button").Int() == 2 {
+      // First RMB hold - Select the window for resizing
+      args[0].Call("preventDefault")
+      args[0].Call("stopPropagation")
+      fmt.Println("First right-click: Window selected for resizing.")
+      highestZIndex++
+      window.Get("style").Set("z-index", strconv.Itoa(highestZIndex))
+      activeWindow = window
+      isResizingInit = true
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-selection.svg), auto")
+    }
+
+    // Mouse down event for selecting and dragging the window (Left-click brings it to front)
     if !isResizingInit {
       // Left-click to bring window to front
       highestZIndex++
@@ -209,24 +215,20 @@ func createDraggableWindow(this js.Value, args []js.Value) interface{} {
         fmt.Println("Dragging initiated with ghost window.")
       }
     }
-    return nil
-  }))
-    
 
-  // Right-click (RMB) on the window to select it for resizing, second right-click activates resizing
-  window.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    if isResizingMode && !isResizingInit && args[0].Get("button").Int() == 2 {
-      // First RMB hold - Select the window for resizing
+    // Right-click (RMB) deletes the window in delete mode
+    if isDeleteMode && args[0].Get("button").Int() == 2 {
       args[0].Call("preventDefault")
       args[0].Call("stopPropagation")
-      fmt.Println("First right-click: Window selected for resizing.")
-      activeWindow = window
-      isResizingInit = true
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-selection.svg), auto")
+      window.Call("remove") // Delete the window
+      isDeleteMode = false
+      justSelected = true
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+      fmt.Println("Window deleted.")
     }
     return nil
   }))
-
+    
   return nil
 }
 
@@ -238,56 +240,34 @@ func initializeContextMenu() {
   // Create the context menu with higher z-index
   menu := document.Call("createElement", "div")
   menu.Set("id", "contextMenu")
-  menu.Set("style", "position: absolute; z-index: 999; display: none; background-color: #EEFFEE; border: solid #8BCE8B; padding: 0; text-align: center;")
+  menu.Set("style", "position: absolute; display: none; background-color: #EEFFEE; border: solid #8BCE8B; padding: 0; text-align: center;")
   body.Call("appendChild", menu)
 
-  // Move option
-  moveOption := document.Call("createElement", "div")
-  moveOption.Set("innerText", "Move")
-  moveOption.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
-  moveOption.Get("style").Set("padding", "10px")
+  // Move, New, Resize, and Delete options
+  moveOption := createMenuOption("Move")
+  newOption := createMenuOption("New")
+  resizeOption := createMenuOption("Resize")
+  deleteOption := createMenuOption("Delete")
 
-  // New option
-  newOption := document.Call("createElement", "div")
-  newOption.Set("innerText", "New")
-  newOption.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
-  newOption.Get("style").Set("padding", "10px")
+  menu.Call("appendChild", moveOption)
+  menu.Call("appendChild", newOption)
+  menu.Call("appendChild", resizeOption)
+  menu.Call("appendChild", deleteOption)
 
-  // Resize option
-  resizeOption := document.Call("createElement", "div")
-  resizeOption.Set("innerText", "Resize")
-  resizeOption.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
-  resizeOption.Get("style").Set("padding", "10px")
-
-  // Hover and selection effects for Move
-  moveOption.Call("addEventListener", "mouseover", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    moveOption.Get("style").Set("background-color", "#418941")
-    return nil
-  }))
-  moveOption.Call("addEventListener", "mouseout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    moveOption.Get("style").Set("background-color", "#EEFFEE")
+  // Cancel menu and actions on left-click
+  body.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+    if args[0].Get("button").Int() == 0 {
+      menu.Get("style").Set("display", "none")
+      isDeleteMode = false // Cancel delete mode on left-click
+      isResizingMode = false
+      isResizingInit = false
+      isDragging = false
+      isMovingMode = false
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+    }
     return nil
   }))
 
-  // Hover and selection effects for New
-  newOption.Call("addEventListener", "mouseover", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    newOption.Get("style").Set("background-color", "#418941")
-    return nil
-  }))
-  newOption.Call("addEventListener", "mouseout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    newOption.Get("style").Set("background-color", "#EEFFEE")
-    return nil
-  }))
-
-  // Hover and selection effects for Resize
-  resizeOption.Call("addEventListener", "mouseover", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    resizeOption.Get("style").Set("background-color", "#418941")
-    return nil
-  }))
-  resizeOption.Call("addEventListener", "mouseout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    resizeOption.Get("style").Set("background-color", "#EEFFEE")
-    return nil
-  }))
 
   // Move mode activation
   moveOption.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -330,16 +310,26 @@ func initializeContextMenu() {
     return nil
   }))
 
-
-  // Add options to the menu (Move, New, Resize)
-  menu.Call("appendChild", moveOption)
-  menu.Call("appendChild", newOption)
-  menu.Call("appendChild", resizeOption)
+  // Delete mode activation
+  deleteOption.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+    if args[0].Get("button").Int() == 2 {
+      args[0].Call("preventDefault")
+      args[0].Call("stopPropagation")
+      justSelected = true
+      isDeleteMode = true
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
+      menu.Get("style").Set("display", "none")
+      fmt.Println("Delete mode activated.")
+    }
+    return nil
+  }))
 
   // Global context menu activation
   body.Call("addEventListener", "contextmenu", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
     args[0].Call("preventDefault")
-    if !justSelected && !isMovingMode && !isResizingMode {
+    if !justSelected && !isMovingMode && !isResizingMode && !isDeleteMode{
+      // Adjust z-index dynamically based on highestZIndex
+      menu.Get("style").Set("z-index", strconv.Itoa(highestZIndex+10))
       menu.Get("style").Set("left", fmt.Sprintf("%dpx", args[0].Get("clientX").Int()))
       menu.Get("style").Set("top", fmt.Sprintf("%dpx", args[0].Get("clientY").Int()))
       menu.Get("style").Set("display", "block")
@@ -347,13 +337,25 @@ func initializeContextMenu() {
     justSelected = false
     return nil
   }))
+}
 
-  // Cancel menu on left-click
-  body.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    if args[0].Get("button").Int() == 0 {
-      menu.Get("style").Set("display", "none")
-    }
+// Create a helper function for menu option creation
+func createMenuOption(optionText string) js.Value {
+  document := js.Global().Get("document")
+  option := document.Call("createElement", "div")
+  option.Set("innerText", optionText)
+  option.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
+  option.Get("style").Set("padding", "10px")
+
+  // Hover and selection effects
+  option.Call("addEventListener", "mouseover", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+    option.Get("style").Set("background-color", "#418941")
     return nil
   }))
+  option.Call("addEventListener", "mouseout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+    option.Get("style").Set("background-color", "#EEFFEE")
+    return nil
+  }))
+  return option
 }
 
