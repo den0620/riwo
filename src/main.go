@@ -81,18 +81,25 @@ func initializeGlobalMouseEvents() {
   // Global mouse move event to adjust ghost window size during resizing
   js.Global().Get("document").Call("addEventListener", "mousemove", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
     if ghostWindow.Truthy() && isResizingMode && isResizingInit && isDragging && !isMovingMode {
-      x := args[0].Get("clientX").Float()
-      y := args[0].Get("clientY").Float()
+      currentX := args[0].Get("clientX").Float()
+      currentY := args[0].Get("clientY").Float()
 
-      // Update ghost window size based on mouse position
-      width := x - ghostWindow.Get("offsetLeft").Float()
-      height := y - ghostWindow.Get("offsetTop").Float()
+      // Calculate and update ghost window size and position based on selection
+      width := currentX - startX
+      height := currentY - startY
+      ghostWindow.Get("style").Set("width", fmt.Sprintf("%fpx", width))
+      ghostWindow.Get("style").Set("height", fmt.Sprintf("%fpx", height))
 
-      if width > 0 && height > 0 {
-        ghostWindow.Get("style").Set("width", fmt.Sprintf("%fpx", width))
-        ghostWindow.Get("style").Set("height", fmt.Sprintf("%fpx", height))
+      // Handle direction to ensure ghost window moves according to selection direction
+      if width < 0 {
+        ghostWindow.Get("style").Set("left", fmt.Sprintf("%fpx", currentX))
+        ghostWindow.Get("style").Set("width", fmt.Sprintf("%fpx", -width))
       }
-      fmt.Println("Ghost window is resizing.")
+      if height < 0 {
+        ghostWindow.Get("style").Set("top", fmt.Sprintf("%fpx", currentY))
+        ghostWindow.Get("style").Set("height", fmt.Sprintf("%fpx", -height))
+      }
+      fmt.Println("Ghost window is resizing with freeform selection.")
     }
     return nil
   }))
@@ -117,6 +124,28 @@ func initializeGlobalMouseEvents() {
     return nil
   }))
 
+  // second rmb
+  js.Global().Get("document").Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+    if isResizingMode && args[0].Get("button").Int() == 2 && isResizingInit {
+      args[0].Call("preventDefault")
+      // Second RMB hold - Start resizing by creating a selection anywhere
+      fmt.Println("Second right-click: Resizing initiated.")
+      isDragging = true
+      // Reset selection start position
+      startX = args[0].Get("clientX").Float()
+      startY = args[0].Get("clientY").Float()
+
+      // Create ghost window for resizing
+      ghostWindow = js.Global().Get("document").Call("createElement", "div")
+      ghostWindow.Set("style", fmt.Sprintf("position: absolute; z-index: %d; border: solid 2px #FF0000;", highestZIndex+1))
+      ghostWindow.Get("style").Set("left", fmt.Sprintf("%fpx", startX))
+      ghostWindow.Get("style").Set("top", fmt.Sprintf("%fpx", startY))
+      js.Global().Get("document").Get("body").Call("appendChild", ghostWindow)
+
+      fmt.Println("Resizing initiated with freeform selection.")
+    }
+    return nil
+  }))
 }
 
 func createDraggableWindow(this js.Value, args []js.Value) interface{} {
@@ -139,7 +168,7 @@ func createDraggableWindow(this js.Value, args []js.Value) interface{} {
   // Prevent the context menu from opening on right-click for windows
   window.Call("addEventListener", "contextmenu", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
     args[0].Call("preventDefault")
-    args[0].Call("stopPropagation")
+    //args[0].Call("stopPropagation")
     fmt.Println("Context menu prevented on draggable window.")
     // Bring window to the front
     if !isResizingInit {
@@ -182,38 +211,18 @@ func createDraggableWindow(this js.Value, args []js.Value) interface{} {
     }
     return nil
   }))
+    
 
   // Right-click (RMB) on the window to select it for resizing, second right-click activates resizing
   window.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    if isResizingMode && args[0].Get("button").Int() == 2 {
+    if isResizingMode && !isResizingInit && args[0].Get("button").Int() == 2 {
+      // First RMB hold - Select the window for resizing
       args[0].Call("preventDefault")
       args[0].Call("stopPropagation")
-
-      if activeWindow.Equal(window) && isResizingInit {
-        // Second RMB hold - Start resizing
-        fmt.Println("Second right-click: Resizing initiated.")
-        startX = args[0].Get("clientX").Float()
-        startY = args[0].Get("clientY").Float()
-
-        // Create ghost window for resizing
-        ghostWindow = document.Call("createElement", "div")
-        rect := window.Call("getBoundingClientRect")
-        ghostWindow.Set("style", fmt.Sprintf("position: absolute; z-index: %d; border: solid 2px #0000FF;", highestZIndex+1))
-        ghostWindow.Get("style").Set("left", fmt.Sprintf("%fpx", rect.Get("left").Float()))
-        ghostWindow.Get("style").Set("top", fmt.Sprintf("%fpx", rect.Get("top").Float()))
-        ghostWindow.Get("style").Set("width", fmt.Sprintf("%fpx", rect.Get("width").Float()))
-        ghostWindow.Get("style").Set("height", fmt.Sprintf("%fpx", rect.Get("height").Float()))
-        body.Call("appendChild", ghostWindow)
-
-        isDragging = true // Initiates resizing through ghost window dragging
-
-      } else if !isResizingInit {
-        // First RMB hold - Select the window for resizing
-        fmt.Println("First right-click: Window selected for resizing.")
-        activeWindow = window
-	isResizingInit = true
-        js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-selection.svg), auto")
-      }
+      fmt.Println("First right-click: Window selected for resizing.")
+      activeWindow = window
+      isResizingInit = true
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-selection.svg), auto")
     }
     return nil
   }))
