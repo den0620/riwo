@@ -8,8 +8,8 @@ hardly inspired by Plan 9's [Rio](https://9p.io/wiki/plan9/using_rio/index.html)
 ## Roadmap
 
 - [x] New
-- [ ] Resize
+- [x] Resize (changes needed)
 - [x] Move
-- [ ] Delete
+- [x] Delete
 - [ ] Hide
 
