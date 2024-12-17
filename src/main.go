@@ -31,16 +31,18 @@ Then you are likely to want to know this:
 - Select option by pressing RMB
 - Click LMB to cancel
 - "New" will open another window
-  (TODO "New" will require making a
-  selection just as "Resize" does)
 - Choose window with RMB
 - "Delete" will remove selected window
 - Hold RMB to drag around in "Move" mode
 - Make selection with RMB in "Resize" mode
+- TODO "Hide"
 Logging is included
 `)
 
-  //js.Global().Set("createDraggableWindow", js.FuncOf(createDraggableWindow))
+  // Shell for running code manipulations
+  //js.Global().Set("rc", js.FuncOf(createConsoleWindow)) not today my friend
+
+  // Generate menu
   initializeContextMenu()
 
   // Add global mousemove and mouseup listeners only once
@@ -202,6 +204,10 @@ func createDraggableWindow(x string, y string, width string, height string) inte
   window := document.Call("createElement", "div")
   window.Set("style", fmt.Sprintf("overflow: hidden; position: absolute; z-index: %d; left: %s; top: %s; width: %s; height: %s; background-color: #f0f0f0; border: solid #55AAAA; padding: 0;", highestZIndex, x, y, width, height))
   window.Set("innerHTML", fmt.Sprintf("<h3>Draggable Window %d</h3><p>html p</p>", windowCount))
+  window.Set("title", fmt.Sprintf("Test%d", windowCount))
+  window.Set("wid", fmt.Sprintf("%d", windowCount))
+
+  fmt.Printf("Generated window's title is \"%s\"; Window's ID (wid) is \"%s\"\n", window.Get("title"), window.Get("wid"))
 
   body.Call("appendChild", window)
 
