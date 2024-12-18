@@ -14,6 +14,7 @@ var (
   justSelected   bool
   isDeleteMode   bool
   isNewMode      bool
+  isHiding       bool
   startX, startY float64
   activeWindow   js.Value
   ghostWindow    js.Value
@@ -27,15 +28,15 @@ func main() {
   fmt.Print(`
 Great, You've found yourself in the console
 Then you are likely to want to know this:
-- Press RMB on background to open context menu
+- Press RMB to open context menu
 - Select option by pressing RMB
 - Click LMB to cancel
-- "New" will open another window
+- "New" will open another window after you
+  make a selection with RMB
 - Choose window with RMB
 - "Delete" will remove selected window
 - Hold RMB to drag around in "Move" mode
 - Make selection with RMB in "Resize" mode
-- TODO "Hide"
 Logging is included
 `)
 
@@ -267,6 +268,38 @@ func createDraggableWindow(x string, y string, width string, height string) inte
 
         fmt.Println("Dragging initiated with ghost window.")
       }
+      if isHiding && args[0].Get("button").Int() == 2 {
+        // Hide window
+        args[0].Call("preventDefault")
+        args[0].Call("stopPropagation")
+        isHiding = false
+        justSelected = true
+        menu := document.Call("getElementById", "contextMenu")
+
+	hidenWindowOption := createMenuOption(fmt.Sprintf("%s", window.Get("title")))
+	hidenWindowOption.Set("id", fmt.Sprintf("menuopt%s", window.Get("wid")))
+
+        // Unhide option activation
+        hidenWindowOption.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+          if args[0].Get("button").Int() == 2 {
+            args[0].Call("preventDefault")
+            args[0].Call("stopPropagation")
+            justSelected = true
+	    removeMenuOption(hidenWindowOption)
+            window.Get("style").Set("display", "block")
+            fmt.Printf("%s\n", window.Get("style").Get("display"))
+            menu.Get("style").Set("display", "none")
+            fmt.Println("Unhide activated.")
+          }
+          return nil
+        }))
+        menu.Call("appendChild", hidenWindowOption)
+        fmt.Printf("option added\n")
+
+        window.Get("style").Set("display", "none")
+        js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+        fmt.Printf("WID %s hidden\n", window.Get("wid"))
+      }
     }
 
     // Right-click (RMB) deletes the window in delete mode
@@ -301,11 +334,13 @@ func initializeContextMenu() {
   newOption := createMenuOption("New")
   resizeOption := createMenuOption("Resize")
   deleteOption := createMenuOption("Delete")
+  hideOption := createMenuOption("Hide")
 
   menu.Call("appendChild", moveOption)
   menu.Call("appendChild", newOption)
   menu.Call("appendChild", resizeOption)
   menu.Call("appendChild", deleteOption)
+  menu.Call("appendChild", hideOption)
 
   // Cancel menu and actions on left-click
   body.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -316,6 +351,7 @@ func initializeContextMenu() {
       isResizingInit = false
       isDragging = false
       isMovingMode = false
+      isHiding = false
       js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
     }
     return nil
@@ -382,10 +418,24 @@ func initializeContextMenu() {
     return nil
   }))
 
+  // Hide mode activation
+  hideOption.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+    if args[0].Get("button").Int() == 2 {
+      args[0].Call("preventDefault")
+      args[0].Call("stopPropagation")
+      justSelected = true
+      isHiding = true
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
+      menu.Get("style").Set("display", "none")
+      fmt.Println("Hide mode activated.")
+    }
+    return nil
+  }))
+
   // Global context menu activation
   body.Call("addEventListener", "contextmenu", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
     args[0].Call("preventDefault")
-    if !justSelected && !isMovingMode && !isResizingMode && !isDeleteMode && !isNewMode {
+    if !justSelected && !isMovingMode && !isResizingMode && !isDeleteMode && !isNewMode && !isHiding {
       // Adjust z-index dynamically based on highestZIndex
       menu.Get("style").Set("z-index", strconv.Itoa(highestZIndex+10))
       menu.Get("style").Set("left", fmt.Sprintf("%dpx", args[0].Get("clientX").Int()))
@@ -397,7 +447,7 @@ func initializeContextMenu() {
   }))
 }
 
-// Create a helper function for menu option creation
+// Menu option creation
 func createMenuOption(optionText string) js.Value {
   document := js.Global().Get("document")
   option := document.Call("createElement", "div")
@@ -417,3 +467,10 @@ func createMenuOption(optionText string) js.Value {
   return option
 }
 
+// Menu option deletion
+func removeMenuOption(option js.Value) {
+  document := js.Global().Get("document")
+  menu := document.Call("getElementById", "contextMenu")
+  menu.Call("removeChild", option)
+  return
+}

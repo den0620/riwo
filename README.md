@@ -11,5 +11,9 @@ hardly inspired by Plan 9's [Rio](https://9p.io/wiki/plan9/using_rio/index.html)
 - [x] Resize
 - [x] Move
 - [x] Delete
-- [ ] Hide
+- [x] Hide
+
+## Possible known issues
+
+There may be some inefficient eventListeners
 
