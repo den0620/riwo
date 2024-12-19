@@ -1,7 +1,6 @@
 package main
 
 import (
-  "fmt"
   "syscall/js"
   "strconv"
 )
@@ -22,10 +21,19 @@ var (
   highestZIndex  int = 10 // Track the highest z-index for bringing windows to front
 )
 
+
+func Print(value string) {
+  js.Global().Get("console").Call("log", value)
+}
+func Ftoa(value float64) string {
+  return strconv.FormatFloat(value, 'f', 6, 64)
+}
+
+
 func main() {
   c := make(chan struct{}, 0)
 
-  fmt.Print(`
+  Print(`
 Great, You've found yourself in the console
 Then you are likely to want to know this:
 - Press RMB to open context menu
@@ -58,9 +66,9 @@ func initializeGlobalMouseEvents() {
     if isDragging && isMovingMode && ghostWindow.Truthy() {
       x := args[0].Get("clientX").Float() - startX
       y := args[0].Get("clientY").Float() - startY
-      ghostWindow.Get("style").Set("left", fmt.Sprintf("%fpx", x))
-      ghostWindow.Get("style").Set("top", fmt.Sprintf("%fpx", y))
-      fmt.Println("Ghost window is moving.")
+      ghostWindow.Get("style").Set("left", Ftoa(x) + "px")
+      ghostWindow.Get("style").Set("top", Ftoa(y) + "px")
+      js.Global().Get("console").Call("log", "Ghost window is moving.")
     }
 
     // Global mouse move event to adjust ghost window size during resizing
@@ -71,19 +79,19 @@ func initializeGlobalMouseEvents() {
       // Calculate and update ghost window size and position based on selection
       width := currentX - startX
       height := currentY - startY
-      ghostWindow.Get("style").Set("width", fmt.Sprintf("%fpx", width))
-      ghostWindow.Get("style").Set("height", fmt.Sprintf("%fpx", height))
+      ghostWindow.Get("style").Set("width", Ftoa(width) + "px")
+      ghostWindow.Get("style").Set("height", Ftoa(height) + "px")
 
       // Handle direction to ensure ghost window moves according to selection direction
       if width < 0 {
-        ghostWindow.Get("style").Set("left", fmt.Sprintf("%fpx", currentX))
-        ghostWindow.Get("style").Set("width", fmt.Sprintf("%fpx", -width))
+        ghostWindow.Get("style").Set("left", Ftoa(currentX) + "px")
+        ghostWindow.Get("style").Set("width", Ftoa(-width) + "px")
       }
       if height < 0 {
-        ghostWindow.Get("style").Set("top", fmt.Sprintf("%fpx", currentY))
-        ghostWindow.Get("style").Set("height", fmt.Sprintf("%fpx", -height))
+        ghostWindow.Get("style").Set("top", Ftoa(currentY) + "px")
+        ghostWindow.Get("style").Set("height", Ftoa(-height) + "px")
       }
-      fmt.Println("Ghost window is resizing with freeform selection.")
+      Print("Ghost window is resizing with freeform selection.")
     }
 
     if ghostWindow.Truthy() && isNewMode && isDragging {
@@ -93,19 +101,19 @@ func initializeGlobalMouseEvents() {
       // Calculate and update ghost window size and position based on selection
       width := currentX - startX
       height := currentY - startY
-      ghostWindow.Get("style").Set("width", fmt.Sprintf("%fpx", width))
-      ghostWindow.Get("style").Set("height", fmt.Sprintf("%fpx", height))
+      ghostWindow.Get("style").Set("width", Ftoa(width) + "px")
+      ghostWindow.Get("style").Set("height", Ftoa(height) + "px")
 
       // Handle direction to ensure ghost window moves according to selection direction
       if width < 0 {
-        ghostWindow.Get("style").Set("left", fmt.Sprintf("%fpx", currentX))
-        ghostWindow.Get("style").Set("width", fmt.Sprintf("%fpx", -width))
+        ghostWindow.Get("style").Set("left", Ftoa(currentX) + "px")
+        ghostWindow.Get("style").Set("width", Ftoa(-width) + "px")
       }
       if height < 0 {
-        ghostWindow.Get("style").Set("top", fmt.Sprintf("%fpx", currentY))
-        ghostWindow.Get("style").Set("height", fmt.Sprintf("%fpx", -height))
+        ghostWindow.Get("style").Set("top", Ftoa(currentY) + "px")
+        ghostWindow.Get("style").Set("height", Ftoa(-height) + "px")
       }
-      fmt.Println("New window selection resizing.")
+      Print("New window selection resizing.")
     }
 
     return nil
@@ -126,7 +134,7 @@ func initializeGlobalMouseEvents() {
         ghostWindow.Call("remove") // Remove ghost window
       }
 
-      fmt.Println("Dragging ended and window teleported to ghost position.")
+      Print("Dragging ended and window teleported to ghost position.")
     }
 
     // Global mouse up event to finalize resizing and apply to window
@@ -144,7 +152,7 @@ func initializeGlobalMouseEvents() {
       isDragging = false
       justSelected = true
 
-      fmt.Println("Resizing completed and window resized to match selection.")
+      Print("Resizing completed and window resized to match selection.")
     }
 
     if isNewMode && isDragging {
@@ -165,7 +173,7 @@ func initializeGlobalMouseEvents() {
         createDraggableWindow(x, y, width, height)
 	//fmt.Println(reflect.TypeOf(newWindow))
 
-        fmt.Println("New window created at selected area.")
+        Print("New window created at selected area.")
       }
     }
     return nil
@@ -176,7 +184,7 @@ func initializeGlobalMouseEvents() {
     if (isResizingMode || isNewMode) && args[0].Get("button").Int() == 2 && (isResizingInit || isNewMode) {
       args[0].Call("preventDefault")
       // Second RMB hold - Start resizing by creating a selection anywhere
-      fmt.Println("Second right-click: Resizing initiated.")
+      Print("Second right-click: Resizing initiated.")
       isDragging = true
       // Reset selection start position
       startX = args[0].Get("clientX").Float()
@@ -184,12 +192,12 @@ func initializeGlobalMouseEvents() {
 
       // Create ghost window for resizing
       ghostWindow = js.Global().Get("document").Call("createElement", "div")
-      ghostWindow.Set("style", fmt.Sprintf("position: absolute; z-index: %d; border: solid 2px #FF0000;", highestZIndex+1))
-      ghostWindow.Get("style").Set("left", fmt.Sprintf("%fpx", startX))
-      ghostWindow.Get("style").Set("top", fmt.Sprintf("%fpx", startY))
+      ghostWindow.Set("style", "position: absolute; z-index: "+strconv.Itoa(highestZIndex+1)+"; border: solid 2px #FF0000;")
+      ghostWindow.Get("style").Set("left", Ftoa(startX) + "px")
+      ghostWindow.Get("style").Set("top", Ftoa(startY) + "px")
       js.Global().Get("document").Get("body").Call("appendChild", ghostWindow)
 
-      fmt.Println("Resizing initiated with freeform selection.")
+      Print("Resizing initiated with freeform selection.")
     }
     return nil
   }))
@@ -203,12 +211,12 @@ func createDraggableWindow(x string, y string, width string, height string) inte
 
   // Create the window element
   window := document.Call("createElement", "div")
-  window.Set("style", fmt.Sprintf("overflow: hidden; position: absolute; z-index: %d; left: %s; top: %s; width: %s; height: %s; background-color: #f0f0f0; border: solid #55AAAA; padding: 0;", highestZIndex, x, y, width, height))
-  window.Set("innerHTML", fmt.Sprintf("<h3>Draggable Window %d</h3><p>html p</p>", windowCount))
-  window.Set("title", fmt.Sprintf("Test%d", windowCount))
-  window.Set("wid", fmt.Sprintf("%d", windowCount))
+  window.Set("style", "overflow: hidden; position: absolute; z-index: "+strconv.Itoa(highestZIndex)+"; left: "+x+"; top: "+y+"; width: "+width+"; height: "+height+"; background-color: #f0f0f0; border: solid #55AAAA; padding: 0;")
+  window.Set("innerHTML", "<h3>Draggable Window "+strconv.Itoa(windowCount)+"</h3><p>html p</p>")
+  window.Set("title", "Test" + strconv.Itoa(windowCount))
+  window.Set("wid", strconv.Itoa(windowCount))
 
-  fmt.Printf("Generated window's title is \"%s\"; Window's ID (wid) is \"%s\"\n", window.Get("title"), window.Get("wid"))
+  Print("Generated window's title is \""+window.Get("title").String()+"\"; Window's ID (wid) is \""+window.Get("wid").String()+"\"")
 
   body.Call("appendChild", window)
 
@@ -216,7 +224,7 @@ func createDraggableWindow(x string, y string, width string, height string) inte
   window.Call("addEventListener", "contextmenu", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
     args[0].Call("preventDefault")
     //args[0].Call("stopPropagation")
-    fmt.Println("Caught click on window")
+    Print("Caught click on window")
     // Bring window to the front
     if !isResizingInit {
       highestZIndex++
@@ -231,7 +239,7 @@ func createDraggableWindow(x string, y string, width string, height string) inte
       // First RMB hold - Select the window for resizing
       args[0].Call("preventDefault")
       args[0].Call("stopPropagation")
-      fmt.Println("First right-click: Window selected for resizing.")
+      Print("First right-click: Window selected for resizing.")
       highestZIndex++
       window.Get("style").Set("z-index", strconv.Itoa(highestZIndex))
       activeWindow = window
@@ -244,12 +252,12 @@ func createDraggableWindow(x string, y string, width string, height string) inte
       // Left-click to bring window to front
       highestZIndex++
       window.Get("style").Set("z-index", strconv.Itoa(highestZIndex))
-      fmt.Println("Window brought to front.")
+      Print("Window brought to front.")
 
       if isMovingMode && args[0].Get("button").Int() == 2 {
         args[0].Call("preventDefault")
         args[0].Call("stopPropagation")
-        activeWindow = window
+	activeWindow = window
         startX = args[0].Get("clientX").Float() - window.Get("offsetLeft").Float()
         startY = args[0].Get("clientY").Float() - window.Get("offsetTop").Float()
         isDragging = true
@@ -261,12 +269,12 @@ func createDraggableWindow(x string, y string, width string, height string) inte
         height := rect.Get("height").Float()
 
         // Ensure ghost window is above everything during drag
-        ghostWindow.Set("style", fmt.Sprintf("position: absolute; z-index: %d; width: %fpx; height: %fpx; border: solid 2px #FF0000; cursor: url(assets/cursor-drag.svg), auto;", highestZIndex+1, width, height))
-        ghostWindow.Get("style").Set("left", fmt.Sprintf("%fpx", window.Get("offsetLeft").Float()))
-        ghostWindow.Get("style").Set("top", fmt.Sprintf("%fpx", window.Get("offsetTop").Float()))
+        ghostWindow.Set("style", "position: absolute; z-index: "+strconv.Itoa(highestZIndex+1)+"; width: "+Ftoa(width)+"px; height: "+Ftoa(height)+"px; border: solid 2px #FF0000; cursor: url(assets/cursor-drag.svg), auto;")
+        ghostWindow.Get("style").Set("left", Ftoa(window.Get("offsetLeft").Float())+"px")
+        ghostWindow.Get("style").Set("top", Ftoa(window.Get("offsetTop").Float())+"px")
         body.Call("appendChild", ghostWindow)
 
-        fmt.Println("Dragging initiated with ghost window.")
+        Print("Dragging initiated with ghost window.")
       }
       if isHiding && args[0].Get("button").Int() == 2 {
         // Hide window
@@ -276,8 +284,8 @@ func createDraggableWindow(x string, y string, width string, height string) inte
         justSelected = true
         menu := document.Call("getElementById", "contextMenu")
 
-	hidenWindowOption := createMenuOption(fmt.Sprintf("%s", window.Get("title")))
-	hidenWindowOption.Set("id", fmt.Sprintf("menuopt%s", window.Get("wid")))
+	hidenWindowOption := createMenuOption(window.Get("title").String())
+	hidenWindowOption.Set("id", "menuopt"+window.Get("wid").String())
 
         // Unhide option activation
         hidenWindowOption.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -287,18 +295,18 @@ func createDraggableWindow(x string, y string, width string, height string) inte
             justSelected = true
 	    removeMenuOption(hidenWindowOption)
             window.Get("style").Set("display", "block")
-            fmt.Printf("%s\n", window.Get("style").Get("display"))
+            Print(window.Get("style").Get("display").String())
             menu.Get("style").Set("display", "none")
-            fmt.Println("Unhide activated.")
+            Print("Unhide activated.")
           }
           return nil
         }))
         menu.Call("appendChild", hidenWindowOption)
-        fmt.Printf("option added\n")
+        Print("option added\n")
 
         window.Get("style").Set("display", "none")
         js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
-        fmt.Printf("WID %s hidden\n", window.Get("wid"))
+        Print("WID "+window.Get("wid").String()+" hidden")
       }
     }
 
@@ -310,7 +318,7 @@ func createDraggableWindow(x string, y string, width string, height string) inte
       isDeleteMode = false
       justSelected = true
       js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
-      fmt.Println("Window deleted.")
+      Print("Window deleted.")
     }
     return nil
   }))
@@ -367,7 +375,7 @@ func initializeContextMenu() {
       isMovingMode = true
       js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
       menu.Get("style").Set("display", "none")
-      fmt.Println("Move mode activated.")
+      Print("Move mode activated.")
     }
     return nil
   }))
@@ -385,7 +393,7 @@ func initializeContextMenu() {
 
       js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
       menu.Get("style").Set("display", "none")
-      fmt.Println("New mode activated. Select an area to create a window.")
+      Print("New mode activated. Select an area to create a window.")
     }
     return nil
   }))
@@ -399,7 +407,7 @@ func initializeContextMenu() {
       isResizingMode = true
       js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
       menu.Get("style").Set("display", "none")
-      fmt.Println("Resize mode activated.")
+      Print("Resize mode activated.")
     }
     return nil
   }))
@@ -413,7 +421,7 @@ func initializeContextMenu() {
       isDeleteMode = true
       js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
       menu.Get("style").Set("display", "none")
-      fmt.Println("Delete mode activated.")
+      Print("Delete mode activated.")
     }
     return nil
   }))
@@ -427,7 +435,7 @@ func initializeContextMenu() {
       isHiding = true
       js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
       menu.Get("style").Set("display", "none")
-      fmt.Println("Hide mode activated.")
+      Print("Hide mode activated.")
     }
     return nil
   }))
@@ -438,8 +446,8 @@ func initializeContextMenu() {
     if !justSelected && !isMovingMode && !isResizingMode && !isDeleteMode && !isNewMode && !isHiding {
       // Adjust z-index dynamically based on highestZIndex
       menu.Get("style").Set("z-index", strconv.Itoa(highestZIndex+10))
-      menu.Get("style").Set("left", fmt.Sprintf("%dpx", args[0].Get("clientX").Int()))
-      menu.Get("style").Set("top", fmt.Sprintf("%dpx", args[0].Get("clientY").Int()))
+      menu.Get("style").Set("left", strconv.Itoa(args[0].Get("clientX").Int()) + "px")
+      menu.Get("style").Set("top", strconv.Itoa(args[0].Get("clientY").Int()) + "px")
       menu.Get("style").Set("display", "block")
     }
     justSelected = false
