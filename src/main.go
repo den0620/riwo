@@ -51,7 +51,7 @@ Then you are likely to want to know this:
 - "Delete" will remove selected window
 - Hold RMB to drag around in "Move" mode
 - Make selection with RMB in "Resize" mode
-For logging type "logging"
+For logging type "logging()"
 `)
 
   // Shell for running code manipulations
@@ -140,6 +140,7 @@ func initializeGlobalMouseEvents() {
         activeWindow.Get("style").Set("top", ghostWindow.Get("style").Get("top"))
         ghostWindow.Call("remove") // Remove ghost window
       }
+      justSelected = false
 
       if verbose {Print("Dragging ended and window teleported to ghost position.")}
     }
@@ -156,6 +157,7 @@ func initializeGlobalMouseEvents() {
       js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
       isResizingMode = false
       isResizingInit = false
+      justSelected = false
       isDragging = false
 
       if verbose {Print("Resizing completed and window resized to match selection.")}
@@ -219,6 +221,7 @@ func createDraggableWindow(x string, y string, width string, height string) inte
   window.Set("innerHTML", "<h3>Draggable Window "+strconv.Itoa(windowCount)+"</h3><p>html p</p>")
   window.Set("title", "Test" + strconv.Itoa(windowCount))
   window.Set("wid", strconv.Itoa(windowCount))
+  window.Set("id", strconv.Itoa(windowCount))
 
   if verbose {Print("Generated window's title is \""+window.Get("title").String()+"\"; Window's ID (wid) is \""+window.Get("wid").String()+"\"")}
 
@@ -306,6 +309,7 @@ func createDraggableWindow(x string, y string, width string, height string) inte
         if verbose {Print("option added\n")}
 
         window.Get("style").Set("display", "none")
+	justSelected = false
         js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
         if verbose {Print("WID "+window.Get("wid").String()+" hidden")}
       }
@@ -317,6 +321,7 @@ func createDraggableWindow(x string, y string, width string, height string) inte
       args[0].Call("stopPropagation")
       window.Call("remove") // Delete the window
       isDeleteMode = false
+      justSelected = false
       js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
       if verbose {Print("Window deleted.")}
     }
@@ -354,11 +359,14 @@ func initializeContextMenu() {
   body.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
     if args[0].Get("button").Int() == 0 {
       menu.Get("style").Set("display", "none")
-      isDeleteMode = false // Cancel delete mode on left-click
-      isResizingMode = false
-      isResizingInit = false
+      if ghostWindow.Truthy() && isDragging {ghostWindow.Call("remove")}
       isDragging = false
       isMovingMode = false
+      isResizingMode = false
+      isResizingInit = false
+      justSelected = false // test
+      isDeleteMode = false
+      isNewMode = false
       isHiding = false
       js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
     }
