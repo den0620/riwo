@@ -9,7 +9,7 @@ hardly inspired by Plan 9's [Rio](https://9p.io/wiki/plan9/using_rio/index.html)
 
 It uses [syscall/js](https://pkg.go.dev/syscall/js) to manipulate DOM and mimic rio
 
-Windows are \<div\>'s with html inside
+Windows are \<div\>s with html inside
 
 Try it here: [deployment](https://ninefid.uk.to/riwo)
 
