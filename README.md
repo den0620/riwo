@@ -22,11 +22,11 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 - [x] Hide
 ### Accessibility
 - [x] Touch adaptation
-### FS (its probably a good idea to make a RO fs and some mountpoint for sanboxing)
+### FS (its probably a good idea to make a RO fs and some mountpoint for sandboxing)
 - [ ] File system structure
-- [ ] Static files
-- [ ] Dynamic files (creatable/deletable)
-- [ ] map to /proc
+- [ ] Static files(?)
+- [ ] Dynamic files(?) (creatable/deletable)
+- [ ] map objects to fs (/proc?)
 ### Basic apps
 - [ ] rc-like shell
 - [ ] shell builtins
@@ -35,8 +35,10 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 
 ## Possible known issues
 
-There may be some inefficient eventListeners
+There may be some inefficient eventListeners (tho i removed per-window ones)
 
 Menu opens with single RMB click and NOT hold because I found it simpler
 
 SVG cursors are not centered and may be junky
+
+Testing needed
