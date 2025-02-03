@@ -41,6 +41,6 @@ There may be some inefficient eventListeners (tho i removed per-window ones)
 
 Menu opens with single RMB click and NOT hold because I found it simpler
 
-SVG cursors are not centered and may be junky
+SVG cursors may be junky
 
 Testing needed

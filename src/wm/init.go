@@ -219,7 +219,7 @@ func CreateDraggableWindow(x string, y string, width string, height string) inte
       window.Get("style").Set("z-index", strconv.Itoa(highestZIndex))
       activeWindow = window
       isResizingInit = true
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-selection.svg), auto")
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-selection.svg) 12 12, auto")
     }
 
     // Mouse down event for selecting and dragging the window (Left-click brings it to front)
@@ -244,7 +244,7 @@ func CreateDraggableWindow(x string, y string, width string, height string) inte
         height := rect.Get("height").Float()
 
         // Ensure ghost window is above everything during drag
-        ghostWindow.Set("style", "position: absolute; z-index: "+strconv.Itoa(highestZIndex+1)+"; width: "+Ftoa(width)+"px; height: "+Ftoa(height)+"px; border: solid 2px #FF0000; cursor: url(assets/cursor-drag.svg), auto;")
+        ghostWindow.Set("style", "position: absolute; z-index: "+strconv.Itoa(highestZIndex+1)+"; width: "+Ftoa(width)+"px; height: "+Ftoa(height)+"px; border: solid 2px #FF0000; cursor: url(assets/cursor-drag.svg) 12 12, auto;")
         ghostWindow.Get("style").Set("left", Ftoa(window.Get("offsetLeft").Float())+"px")
         ghostWindow.Get("style").Set("top", Ftoa(window.Get("offsetTop").Float())+"px")
         body.Call("appendChild", ghostWindow)
@@ -349,7 +349,7 @@ func InitializeContextMenu() {
       args[0].Call("stopPropagation")
       justSelected = true
       isMovingMode = true
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg) 12 12, auto")
       menu.Get("style").Set("display", "none")
       if verbose {Print("Move mode activated.")}
     }
@@ -367,7 +367,7 @@ func InitializeContextMenu() {
       startX = 0
       startY = 0
 
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg) 12 12, auto")
       menu.Get("style").Set("display", "none")
       if verbose {Print("New mode activated. Select an area to create a window.")}
     }
@@ -381,7 +381,7 @@ func InitializeContextMenu() {
       args[0].Call("stopPropagation")
       justSelected = true
       isResizingMode = true
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg) 12 12, auto")
       menu.Get("style").Set("display", "none")
       if verbose {Print("Resize mode activated.")}
     }
@@ -395,7 +395,7 @@ func InitializeContextMenu() {
       args[0].Call("stopPropagation")
       justSelected = true
       isDeleteMode = true
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg) 12 12, auto")
       menu.Get("style").Set("display", "none")
       if verbose {Print("Delete mode activated.")}
     }
@@ -409,7 +409,7 @@ func InitializeContextMenu() {
       args[0].Call("stopPropagation")
       justSelected = true
       isHiding = true
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg), auto")
+      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-select.svg) 12 12, auto")
       menu.Get("style").Set("display", "none")
       if verbose {Print("Hide mode activated.")}
     }
