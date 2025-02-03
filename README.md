@@ -1,9 +1,11 @@
 # riwo
-small webassembly rio-like implementation in go
+small webassembly rio-like window manager in go
 
 riwo stands for "Riwo is web one"
 
 hardly inspired by Plan 9's [Rio](https://9p.io/wiki/plan9/using_rio/index.html)
+
+![Preview](screenshot.png)
 
 ## How it works
 
@@ -20,8 +22,6 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 - [x] Move
 - [x] Delete
 - [x] Hide
-### Accessibility
-- [x] Touch adaptation
 ### FS (its probably a good idea to make a RO fs and some mountpoint for sandboxing)
 - [ ] File system structure
 - [ ] Static files(?)
@@ -32,6 +32,8 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 - [ ] shell builtins
 - [ ] coreutils
 - [ ] acme-like text editor/viewer
+### Accessibility
+- [x] Touch adaptation
 
 ## Possible known issues
 
