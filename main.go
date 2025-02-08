@@ -4,7 +4,7 @@ package main
 import (
   "syscall/js"
   "riwo/wm"
-  "riwo/demo"
+  "riwo/apps"
 )
 
 
