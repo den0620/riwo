@@ -1,150 +1,196 @@
+/*
+(Almost) All javascript DOM events here in only copy
+for the sake of optimization
+*/
+
 package wm
 
-
 import (
-  "syscall/js"
-  "strconv"
+	"strconv"
+	"syscall/js"
 )
 
-
+// InitializeGlobalMouseEvents sets up global mouse event listeners.
 func InitializeGlobalMouseEvents() {
-  js.Global().Get("document").Call("addEventListener", "mousemove", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    // Global mouse move event
-    if isDragging && isMovingMode && ghostWindow.Truthy() {
-      x := args[0].Get("clientX").Float() - startX
-      y := args[0].Get("clientY").Float() - startY
-      ghostWindow.Get("style").Set("left", Ftoa(x) + "px")
-      ghostWindow.Get("style").Set("top", Ftoa(y) + "px")
-      if verbose {Print("Ghost window is moving.")}
-    }
+	// Moving mouse
+	js.Global().Get("document").Call("addEventListener", "mousemove", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// In "Move" mode
+		if IsDragging && IsMovingMode && GhostWindow.Truthy() {
+			x := args[0].Get("clientX").Float() - StartX
+			y := args[0].Get("clientY").Float() - StartY
+			GhostWindow.Get("style").Set("left", Ftoa(x)+"px")
+			GhostWindow.Get("style").Set("top", Ftoa(y)+"px")
+			if Verbose {
+				Print("Ghost window is moving.")
+			}
+		}
 
-    // Global mouse move event to adjust ghost window size during resizing
-    if ghostWindow.Truthy() && isResizingMode && isResizingInit && isDragging && !isMovingMode {
-      currentX := args[0].Get("clientX").Float()
-      currentY := args[0].Get("clientY").Float()
+		// In "Resize" mode adjust ghost window size
+		if GhostWindow.Truthy() && IsResizingMode && IsResizingInit && IsDragging && !IsMovingMode {
+			currentX := args[0].Get("clientX").Float()
+			currentY := args[0].Get("clientY").Float()
+			// Calculate and update ghost window size and position based on selection
+			width := currentX - StartX
+			height := currentY - StartY
+			GhostWindow.Get("style").Set("width", Ftoa(width)+"px")
+			GhostWindow.Get("style").Set("height", Ftoa(height)+"px")
+			// Handle direction to ensure ghost window moves according to selection direction
+			if width < 0 {
+				GhostWindow.Get("style").Set("left", Ftoa(currentX)+"px")
+				GhostWindow.Get("style").Set("width", Ftoa(-width)+"px")
+			}
+			if height < 0 {
+				GhostWindow.Get("style").Set("top", Ftoa(currentY)+"px")
+				GhostWindow.Get("style").Set("height", Ftoa(-height)+"px")
+			}
+			if Verbose {
+				Print("Ghost window is resizing with freeform selection.")
+			}
+		}
 
-      // Calculate and update ghost window size and position based on selection
-      width := currentX - startX
-      height := currentY - startY
-      ghostWindow.Get("style").Set("width", Ftoa(width) + "px")
-      ghostWindow.Get("style").Set("height", Ftoa(height) + "px")
+		// In "New" mode adjusting selection
+		if GhostWindow.Truthy() && IsNewMode && IsDragging {
+			currentX := args[0].Get("clientX").Float()
+			currentY := args[0].Get("clientY").Float()
+			// Calculate and update ghost window size and position based on selection
+			width := currentX - StartX
+			height := currentY - StartY
+			GhostWindow.Get("style").Set("width", Ftoa(width)+"px")
+			GhostWindow.Get("style").Set("height", Ftoa(height)+"px")
+			// Handle direction to ensure ghost window moves according to selection direction
+			if width < 0 {
+				GhostWindow.Get("style").Set("left", Ftoa(currentX)+"px")
+				GhostWindow.Get("style").Set("width", Ftoa(-width)+"px")
+			}
+			if height < 0 {
+				GhostWindow.Get("style").Set("top", Ftoa(currentY)+"px")
+				GhostWindow.Get("style").Set("height", Ftoa(-height)+"px")
+			}
+			if Verbose {
+				Print("New window selection resizing.")
+			}
+		}
 
-      // Handle direction to ensure ghost window moves according to selection direction
-      if width < 0 {
-        ghostWindow.Get("style").Set("left", Ftoa(currentX) + "px")
-        ghostWindow.Get("style").Set("width", Ftoa(-width) + "px")
-      }
-      if height < 0 {
-        ghostWindow.Get("style").Set("top", Ftoa(currentY) + "px")
-        ghostWindow.Get("style").Set("height", Ftoa(-height) + "px")
-      }
-      if verbose {Print("Ghost window is resizing with freeform selection.")}
-    }
+		return nil
+	}))
 
-    if ghostWindow.Truthy() && isNewMode && isDragging {
-      currentX := args[0].Get("clientX").Float()
-      currentY := args[0].Get("clientY").Float()
+	// Mouse down
+	js.Global().Get("document").Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// In "Resize" Second RMB after choosing window
+		// Also "New"'s initial area selecting
+		if (IsResizingMode || IsNewMode) && args[0].Get("button").Int() == 2 && (IsResizingInit || IsNewMode) {
+			args[0].Call("preventDefault")
+			// Second RMB hold - Start resizing by creating a selection anywhere
+			if Verbose {
+				Print("Second right-click: Resizing initiated.")
+			}
+			IsDragging = true
+			// Reset selection start position
+			StartX = args[0].Get("clientX").Float()
+			StartY = args[0].Get("clientY").Float()
+			// Create ghost window for resizing
+			GhostWindow = js.Global().Get("document").Call("createElement", "div")
+			GhostWindow.Set("style", "position: absolute; z-index: "+strconv.Itoa(HighestZIndex+1)+"; border: solid 2px #FF0000;")
+			GhostWindow.Get("style").Set("left", Ftoa(StartX)+"px")
+			GhostWindow.Get("style").Set("top", Ftoa(StartY)+"px")
+			js.Global().Get("document").Get("body").Call("appendChild", GhostWindow)
+			if Verbose {
+				Print("Resizing initiated with freeform selection.")
+			}
+		}
+		// Cancel menu and reset all modes on leftclick.
+		if args[0].Get("button").Int() == 0 {
+			if ContextMenu.Type() == js.TypeUndefined {
+				Print("ContextMenu is UNDEFINED!")
+				// Or handle the error appropriately
+			} else {
+				ContextMenu.Get("style").Set("display", "none")
+			}
+			if GhostWindow.Truthy() && IsDragging {
+				GhostWindow.Call("remove")
+				GhostWindow = js.Null()
+			}
+			IsDragging = false
+			IsMovingMode = false
+			IsResizingMode = false
+			IsResizingInit = false
+			JustSelected = false
+			IsDeleteMode = false
+			IsNewMode = false
+			IsHiding = false
+			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+		}
+		return nil
+	}))
 
-      // Calculate and update ghost window size and position based on selection
-      width := currentX - startX
-      height := currentY - startY
-      ghostWindow.Get("style").Set("width", Ftoa(width) + "px")
-      ghostWindow.Get("style").Set("height", Ftoa(height) + "px")
+	// Mouse up
+	js.Global().Get("document").Call("addEventListener", "mouseup", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// In "move" stop dragging (Teleport to ghost)
+		if IsMovingMode && IsDragging {
+			IsDragging = false
+			IsMovingMode = false
+			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+			// Move the window to the ghost's position
+			if GhostWindow.Truthy() && ActiveWindow.Truthy() {
+				ActiveWindow.Get("style").Set("left", GhostWindow.Get("style").Get("left"))
+				ActiveWindow.Get("style").Set("top", GhostWindow.Get("style").Get("top"))
+				GhostWindow.Call("remove") // Remove ghost window
+				GhostWindow = js.Null()    // Reset ghost window reference
+			}
+			JustSelected = false
+			if Verbose {
+				Print("Dragging ended and window teleported to ghost position.")
+			}
+		}
 
-      // Handle direction to ensure ghost window moves according to selection direction
-      if width < 0 {
-        ghostWindow.Get("style").Set("left", Ftoa(currentX) + "px")
-        ghostWindow.Get("style").Set("width", Ftoa(-width) + "px")
-      }
-      if height < 0 {
-        ghostWindow.Get("style").Set("top", Ftoa(currentY) + "px")
-        ghostWindow.Get("style").Set("height", Ftoa(-height) + "px")
-      }
-      if verbose {Print("New window selection resizing.")}
-    }
+		// In "Resize" stop selecting (Teleport to ghost)
+		if GhostWindow.Truthy() && ActiveWindow.Truthy() && IsResizingMode && IsResizingInit && IsDragging && !IsMovingMode {
+			IsResizingMode = false
+			IsResizingInit = false
+			JustSelected = false
+			IsDragging = false
+			// Replace all dimensions with ghost's ones
+			ActiveWindow.Get("style").Set("left", GhostWindow.Get("style").Get("left"))
+			ActiveWindow.Get("style").Set("top", GhostWindow.Get("style").Get("top"))
+			ActiveWindow.Get("style").Set("width", GhostWindow.Get("style").Get("width"))
+			ActiveWindow.Get("style").Set("height", GhostWindow.Get("style").Get("height"))
+			GhostWindow.Call("remove") // Remove the ghost window
+			GhostWindow = js.Null()    // Reset ghost window reference
+			// Reset cursor
+			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+			if Verbose {
+				Print("Resizing completed and window resized to match selection.")
+			}
+		}
 
-    return nil
-  }))
+		// In "New" make new window
+		if IsNewMode && IsDragging {
+			args[0].Call("stopPropagation")
+			IsNewMode = false
+			IsDragging = false
+			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+			// Create a new window at the ghost window's position and size
+			if GhostWindow.Truthy() {
+				x := GhostWindow.Get("style").Get("left").String()
+				y := GhostWindow.Get("style").Get("top").String()
+				width := GhostWindow.Get("style").Get("width").String()
+				height := GhostWindow.Get("style").Get("height").String()
+				GhostWindow.Call("remove")
+				GhostWindow = js.Null()
+				neuwindow := WindowCreate(x, y, width, height, "")
+				if Verbose {
+					Print("New window created at selected area.")
+				}
+				// Intends existance of default app
+				APP_default := js.Global().Get("LaunchDefault")
+				go APP_default.Invoke(neuwindow.ID)
+				if Verbose {
+					Print("LaunchDefault attached to the new window")
+				}
+			}
+		}
 
-  js.Global().Get("document").Call("addEventListener", "mouseup", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    // Global mouse up event to stop dragging
-    if isMovingMode && isDragging {
-      isDragging = false
-      isMovingMode = false
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
-
-      // Move the window to the ghost's position
-      if ghostWindow.Truthy() && activeWindow.Truthy() {
-        activeWindow.Get("style").Set("left", ghostWindow.Get("style").Get("left"))
-        activeWindow.Get("style").Set("top", ghostWindow.Get("style").Get("top"))
-        ghostWindow.Call("remove") // Remove ghost window
-      }
-      justSelected = false
-
-      if verbose {Print("Dragging ended and window teleported to ghost position.")}
-    }
-
-    // Global mouse up event to finalize resizing and apply to window
-    if ghostWindow.Truthy() && activeWindow.Truthy() && isResizingMode && isResizingInit && isDragging && !isMovingMode {
-      // Apply the ghost window's size and position to the actual window
-      activeWindow.Get("style").Set("left", ghostWindow.Get("style").Get("left"))
-      activeWindow.Get("style").Set("top", ghostWindow.Get("style").Get("top"))
-      activeWindow.Get("style").Set("width", ghostWindow.Get("style").Get("width"))
-      activeWindow.Get("style").Set("height", ghostWindow.Get("style").Get("height"))
-      ghostWindow.Call("remove") // Remove the ghost window
-      ghostWindow = js.Null() // Reset ghost window reference
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
-      isResizingMode = false
-      isResizingInit = false
-      justSelected = false
-      isDragging = false
-
-      if verbose {Print("Resizing completed and window resized to match selection.")}
-    }
-
-    if isNewMode && isDragging {
-      isNewMode = false
-      isDragging = false
-      js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
-
-      // Create a new window at the ghost window's position and size
-      if ghostWindow.Truthy() {
-        x := ghostWindow.Get("style").Get("left").String()
-        y := ghostWindow.Get("style").Get("top").String()
-        width := ghostWindow.Get("style").Get("width").String()
-        height := ghostWindow.Get("style").Get("height").String()
-        ghostWindow.Call("remove")
-        ghostWindow = js.Null()
-
-        CreateDraggableWindow(x, y, width, height)
-
-        if verbose {Print("New window created at selected area.")}
-      }
-    }
-    return nil
-  }))
-
-  // second rmb
-  js.Global().Get("document").Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-    if (isResizingMode || isNewMode) && args[0].Get("button").Int() == 2 && (isResizingInit || isNewMode) {
-      args[0].Call("preventDefault")
-      // Second RMB hold - Start resizing by creating a selection anywhere
-      if verbose {Print("Second right-click: Resizing initiated.")}
-      isDragging = true
-      // Reset selection start position
-      startX = args[0].Get("clientX").Float()
-      startY = args[0].Get("clientY").Float()
-
-      // Create ghost window for resizing
-      ghostWindow = js.Global().Get("document").Call("createElement", "div")
-      ghostWindow.Set("style", "position: absolute; z-index: "+strconv.Itoa(highestZIndex+1)+"; border: solid 2px #FF0000;")
-      ghostWindow.Get("style").Set("left", Ftoa(startX) + "px")
-      ghostWindow.Get("style").Set("top", Ftoa(startY) + "px")
-      js.Global().Get("document").Get("body").Call("appendChild", ghostWindow)
-
-      if verbose {Print("Resizing initiated with freeform selection.")}
-    }
-    return nil
-  }))
+		return nil
+	}))
+	return
 }
-

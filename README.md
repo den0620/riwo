@@ -1,5 +1,5 @@
 # riwo
-small webassembly rio-like window manager in go
+Small webassembly rio-like window manager in go
 
 riwo stands for "Riwo is web one"
 
@@ -8,8 +8,6 @@ hardly inspired by Plan 9's [Rio](https://9p.io/wiki/plan9/using_rio/index.html)
 ![Preview](screenshot.webp)
 
 ## How it works
-
-IT WON'T BUILD AND RUN. IT'S IN PROCESS OF A HUGE REWORK. I JUST WANTED TO SAVE MIDDLE CHANGES. USE ONE FROM RELEASE.
 
 It uses [syscall/js](https://pkg.go.dev/syscall/js) to manipulate DOM and mimic rio
 
@@ -24,17 +22,22 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 - [x] Move
 - [x] Delete
 - [x] Hide
-- [ ] Window-specific menu
+- [x] Window-specific menu
+- [x] Bearable apps
 ### Accessibility
-- [x] Touch adaptation
+- [ ] Touch adaptation (broke for some reason)
 
 ## Possible known issues
-
-There may be some inefficient eventListeners (tho i removed per-window ones)
 
 Menu opens with single RMB click and NOT hold because I found it simpler
 
 SVG cursors may be junky
 
-Testing needed
+APP_defaults' buttons have default cursors (will fix soon)
+
+Hidden windows appear in context menu unsorted (will fix soon)
+
+Context menu appears after modes (will fix soon)
+
+If mode was interrupted without mouseup things may brake (I really dont want to fix this)
 
