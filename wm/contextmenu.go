@@ -138,8 +138,8 @@ func InitializeContextMenu() {
 			}
 			// Append hidden windows' unhides, if any.
 			if len(ContextMenuHides) > 0 {
-				for optionname := range ContextMenuHides {
-					ContextMenu.Call("appendChild", ContextMenuHides[optionname])
+				for _, hiddenWindowButton := range ContextMenuHides {
+					ContextMenu.Call("appendChild", hiddenWindowButton)
 				}
 			}
 

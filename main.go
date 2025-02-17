@@ -51,7 +51,7 @@ For logging there are:
 	wm.Verbose = true // Temporary permanent logging
 
 	wm.AllWindows = make(map[string]*wm.Window)
-	wm.ContextMenuHides = make(map[string]js.Value)
+	wm.ContextMenuHides = make([]js.Value, 0)
 
 	// Set default app for window
 	js.Global().Set("LaunchDefault", js.FuncOf(LaunchDefault))

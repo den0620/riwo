@@ -120,14 +120,19 @@ func WindowCreate(x, y, width, height, content string) *Window {
 						RemoveMenuOption(hiddenWindowOption)
 						winElem.Get("style").Set("display", "block")
 						ContextMenu.Get("style").Set("display", "none")
-						delete(ContextMenuHides, "menuopt"+strconv.Itoa(neuwindow.ID))
+						// Delete by value
+						for index, value := range ContextMenuHides {
+							if value.Get("id").String() == hiddenWindowOption.Get("id").String() {
+								ContextMenuHides = append(ContextMenuHides[:index], ContextMenuHides[index+1:]...)
+							}
+						}
 						if Verbose {
 							Print("Unhide activated.")
 						}
 					}
 					return nil
 				}))
-				ContextMenuHides["menuopt"+strconv.Itoa(neuwindow.ID)] = hiddenWindowOption
+				ContextMenuHides = append(ContextMenuHides, hiddenWindowOption)
 				winElem.Get("style").Set("display", "none")
 				JustSelected = false
 				js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")

@@ -33,10 +33,6 @@ Menu opens with single RMB click and NOT hold because I found it simpler
 
 SVG cursors may be junky
 
-APP_defaults' buttons have default cursors (will fix soon)
-
-Hidden windows appear in context menu unsorted (will fix soon)
-
 Context menu appears after modes (will fix soon)
 
 If mode was interrupted without mouseup things may brake (I really dont want to fix this)

@@ -27,10 +27,8 @@ func APP_default(window *wm.Window) {
 
 	// Iterate over AppRegistry and create a button for each app (skip Default to avoid recursion)
 	for appName, appFunc := range AppRegistry {
-		btn := document.Call("createElement", "button")
-		btn.Set("innerText", appName)
-		btn.Get("style").Set("padding", "10px")
-		btn.Get("style").Set("fontSize", "16px")
+		// Temporary, in future make new design for APP_default
+		btn := wm.CreateMenuOption("APP_" + appName)
 		// On click, call the corresponding app's main function.
 		btn.Call("addEventListener", "click", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 			// When an app button is clicked, transfer the window to that app.

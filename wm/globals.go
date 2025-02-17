@@ -12,7 +12,7 @@ import (
 
 var (
 	ContextMenu      js.Value
-	ContextMenuHides map[string]js.Value
+	ContextMenuHides []js.Value
 	IsDragging       bool
 	IsMovingMode     bool
 	IsResizingMode   bool
