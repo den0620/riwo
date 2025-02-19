@@ -33,7 +33,6 @@ Menu opens with single RMB click and NOT hold because I found it simpler
 
 SVG cursors may be junky
 
-Context menu appears after modes (will fix soon)
-
 If mode was interrupted without mouseup things may brake (I really dont want to fix this)
 
+APP_default's design is awful

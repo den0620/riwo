@@ -64,6 +64,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 			// First RMB hold - Select the window for resizing
 			args[0].Call("preventDefault")
 			args[0].Call("stopPropagation")
+			JustSelected = true
 			if Verbose {
 				Print("First right-click: Window selected for resizing.")
 			}
@@ -83,6 +84,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 			if IsMovingMode && args[0].Get("button").Int() == 2 {
 				args[0].Call("preventDefault")
 				args[0].Call("stopPropagation")
+				//JustSelected = true
 				StartX = args[0].Get("clientX").Float() - winElem.Get("offsetLeft").Float()
 				StartY = args[0].Get("clientY").Float() - winElem.Get("offsetTop").Float()
 				IsDragging = true
@@ -96,6 +98,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 				GhostWindow.Get("style").Set("left", Ftoa(winElem.Get("offsetLeft").Float())+"px")
 				GhostWindow.Get("style").Set("top", Ftoa(winElem.Get("offsetTop").Float())+"px")
 				body.Call("appendChild", GhostWindow)
+				JustSelected = true
 				if Verbose {
 					Print("Dragging initiated with ghost window.")
 				}
@@ -104,6 +107,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 				// Hide window
 				args[0].Call("preventDefault")
 				args[0].Call("stopPropagation")
+				JustSelected = true
 				IsHiding = false
 
 				hiddenWindowOption := CreateMenuOption("wid " + strconv.Itoa(neuwindow.ID))
@@ -117,6 +121,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 					if args[0].Get("button").Int() == 2 {
 						args[0].Call("preventDefault")
 						args[0].Call("stopPropagation")
+						JustSelected = true
 						RemoveMenuOption(hiddenWindowOption)
 						winElem.Get("style").Set("display", "block")
 						ContextMenu.Get("style").Set("display", "none")
@@ -134,7 +139,6 @@ func WindowCreate(x, y, width, height, content string) *Window {
 				}))
 				ContextMenuHides = append(ContextMenuHides, hiddenWindowOption)
 				winElem.Get("style").Set("display", "none")
-				JustSelected = false
 				js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
 				if Verbose {
 					Print("WID " + strconv.Itoa(neuwindow.ID) + " hidden")
@@ -148,7 +152,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 			args[0].Call("stopPropagation")
 			WindowRemove(neuwindow)
 			IsDeleteMode = false
-			JustSelected = false
+			JustSelected = true
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
 			if Verbose {
 				Print("Window deleted.")

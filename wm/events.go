@@ -80,6 +80,7 @@ func InitializeGlobalMouseEvents() {
 		// Also "New"'s initial area selecting
 		if (IsResizingMode || IsNewMode) && args[0].Get("button").Int() == 2 && (IsResizingInit || IsNewMode) {
 			args[0].Call("preventDefault")
+			args[0].Call("stopPropagation")
 			// Second RMB hold - Start resizing by creating a selection anywhere
 			if Verbose {
 				Print("Second right-click: Resizing initiated.")
@@ -137,7 +138,7 @@ func InitializeGlobalMouseEvents() {
 				GhostWindow.Call("remove") // Remove ghost window
 				GhostWindow = js.Null()    // Reset ghost window reference
 			}
-			JustSelected = false
+			//JustSelected = false
 			if Verbose {
 				Print("Dragging ended and window teleported to ghost position.")
 			}
@@ -147,7 +148,7 @@ func InitializeGlobalMouseEvents() {
 		if GhostWindow.Truthy() && ActiveWindow.Truthy() && IsResizingMode && IsResizingInit && IsDragging && !IsMovingMode {
 			IsResizingMode = false
 			IsResizingInit = false
-			JustSelected = false
+			JustSelected = true
 			IsDragging = false
 			// Replace all dimensions with ghost's ones
 			ActiveWindow.Get("style").Set("left", GhostWindow.Get("style").Get("left"))
@@ -166,6 +167,7 @@ func InitializeGlobalMouseEvents() {
 		// In "New" make new window
 		if IsNewMode && IsDragging {
 			args[0].Call("stopPropagation")
+			JustSelected = true
 			IsNewMode = false
 			IsDragging = false
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
