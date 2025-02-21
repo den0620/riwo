@@ -74,7 +74,9 @@ func APP_default(window *wm.Window) {
 
         // Click handler
         btn.Call("addEventListener", "click", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-            wm.Print("App " + appName + " selected")
+			if wm.Verbose {
+            	wm.Print("App " + appName + " selected")
+			}
             appFunc(window)
             return nil
         }))

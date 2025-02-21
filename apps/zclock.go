@@ -39,8 +39,10 @@ func APP_zclock(window *wm.Window) {
     
     // UTC adjustment input
     utcLabel := document.Call("createElement", "label")
+	utcLabel.Get("style").Set("cursor", "url(assets/cursor.svg), auto")
     utcLabel.Set("textContent", "UTC Offset: ")
     utcInput := document.Call("createElement", "input")
+	utcInput.Get("style").Set("cursor", "url(assets/cursor-selection.svg) 12 12, auto")
     utcInput.Set("type", "number")
     utcInput.Set("value", "5")
     utcInput.Set("min", "-12")
@@ -48,8 +50,10 @@ func APP_zclock(window *wm.Window) {
     
     // Color theme selector
     themeLabel := document.Call("createElement", "label")
+	themeLabel.Get("style").Set("cursor", "url(assets/cursor.svg), auto")
     themeLabel.Set("textContent", "Color Theme: ")
     themeSelect := document.Call("createElement", "select")
+	themeSelect.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
     
     themes := []string{"monochrome", "red", "green", "blue", "yellow", "aqua", "gray"}
     for _, theme := range themes {
