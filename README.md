@@ -22,7 +22,7 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 - [x] Move
 - [x] Delete
 - [x] Hide
-- [x] Window-specific menu
+- [x] Window-specific context menu entries
 - [x] Bearable apps
 ### Accessibility
 - [ ] Touch adaptation (broke for some reason)
@@ -34,7 +34,5 @@ Menu opens with single RMB click and NOT hold because I found it simpler
 SVG cursors may be junky
 
 If mode was interrupted without mouseup things may brake (I really dont want to fix this)
-
-APP_default's design is awful
 
 Apps or their processes may remain alive (this should be fixed by checking if underlying window isn't nil but idk)
