@@ -35,8 +35,6 @@ SVG cursors may be junky
 
 If mode was interrupted without mouseup things may brake (I really dont want to fix this)
 
-"New" and "Resize" still require dummby click after them to open menu on some machines
-
 APP_default's design is awful
 
 Apps or their processes may remain alive (this should be fixed by checking if underlying window isn't nil but idk)
