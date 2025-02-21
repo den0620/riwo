@@ -120,15 +120,20 @@ func InitializeContextMenu() {
 			ContextMenu.Call("appendChild", resizeOption)
 			ContextMenu.Call("appendChild", deleteOption)
 			ContextMenu.Call("appendChild", hideOption)
+			// Clear active window if deleted (or something)
+			if (CurrentWindow != nil) && (CurrentWindow.ID == -1) {
+				CurrentWindow = nil
+			}
 			// Append custom context menu entries from the active window, if any.
 			if ActiveWindow.Truthy() && CurrentWindow != nil && CurrentWindow.ContextEntries != nil {
 				for _, customOption := range CurrentWindow.ContextEntries {
-					opt := CreateMenuOption(customOption.name)
+					opt := CreateMenuOption(customOption.Name)
 					opt.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 						args[0].Call("preventDefault")
 						args[0].Call("stopPropagation")
+						JustSelected = true
 						// Execute default callback for this option.
-						customOption.callback()
+						customOption.Callback()
 						ContextMenu.Get("style").Set("display", "none") // hide menu after click
 						return nil
 					}))

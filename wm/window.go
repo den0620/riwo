@@ -10,15 +10,17 @@ import (
 	"syscall/js"
 )
 
+
+// Define a named type for the context entry.
+type ContextEntry struct {
+    Name     string
+    Callback func()
+}
 // Type `Window` manages single abstract window’s properties.
 type Window struct {
 	ID      int      // For the most part unites DOM object and Go object
 	Element js.Value // Connected DOM element.
-	// Tho "Move", "Resize", "Delete" and "Hide" are basic ones
-	ContextEntries []struct {
-		name     string
-		callback func()
-	}
+	ContextEntries []ContextEntry // Tho "Move", "Resize", "Delete" and "Hide" are basic ones
 }
 
 // NewWindow creates a new Window, sets up its DOM element, and returns a pointer to it.

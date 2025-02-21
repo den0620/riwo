@@ -148,7 +148,7 @@ func InitializeGlobalMouseEvents() {
 		if GhostWindow.Truthy() && ActiveWindow.Truthy() && IsResizingMode && IsResizingInit && IsDragging && !IsMovingMode {
 			IsResizingMode = false
 			IsResizingInit = false
-			JustSelected = true
+			JustSelected = false
 			IsDragging = false
 			// Replace all dimensions with ghost's ones
 			ActiveWindow.Get("style").Set("left", GhostWindow.Get("style").Get("left"))
