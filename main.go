@@ -7,6 +7,16 @@ import (
 	"syscall/js"
 )
 
+func Logging(this js.Value, args []js.Value) interface{} {
+	wm.Verbose = !wm.Verbose
+	if wm.Verbose {
+		wm.Print("Logging is now ON")
+	} else {
+		wm.Print("Logging is now OFF")
+	}
+	return nil
+}
+
 func LaunchDefault(this js.Value, args []js.Value) interface{} {
 	if len(args) != 1 {
 		return "Expected one integer (window id)" // No or too many args
@@ -45,10 +55,11 @@ Then you are likely to want to know this:
 - Select state wants RMB click ("Delete", "Resize")
   or hold ("Move") on desired window
 For logging there are:
-+ Nothing yet
++ Logging()
 `)
 
-	wm.Verbose = true // Temporary permanent logging
+	// Logging toggler
+	js.Global().Set("Logging", js.FuncOf(Logging))
 
 	wm.AllWindows = make(map[string]*wm.Window)
 	wm.ContextMenuHides = make([]js.Value, 0)
