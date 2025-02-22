@@ -133,6 +133,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 								ContextMenuHides = append(ContextMenuHides[:index], ContextMenuHides[index+1:]...)
 							}
 						}
+						JustSelected = false
 						if Verbose {
 							Print("Unhide activated.")
 						}
@@ -142,6 +143,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 				ContextMenuHides = append(ContextMenuHides, hiddenWindowOption)
 				winElem.Get("style").Set("display", "none")
 				js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+				JustSelected = false
 				if Verbose {
 					Print("WID " + strconv.Itoa(neuwindow.ID) + " hidden")
 				}
@@ -152,10 +154,11 @@ func WindowCreate(x, y, width, height, content string) *Window {
 		if IsDeleteMode && args[0].Get("button").Int() == 2 {
 			args[0].Call("preventDefault")
 			args[0].Call("stopPropagation")
+			JustSelected = true
 			WindowRemove(neuwindow)
 			IsDeleteMode = false
-			JustSelected = true
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+			JustSelected = false
 			if Verbose {
 				Print("Window deleted.")
 			}

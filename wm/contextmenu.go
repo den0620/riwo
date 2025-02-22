@@ -106,10 +106,16 @@ func InitializeContextMenu() {
 		return nil
 	}))
 
-	// Omit browser's context menu and call ours
+	// Omit browser's context menu
 	body.Call("addEventListener", "contextmenu", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		args[0].Call("preventDefault")
-		if !JustSelected && !IsMovingMode && !IsResizingMode && !IsDeleteMode && !IsNewMode && !IsHiding {
+		//justSelected = false
+		return nil
+	}))
+	// And call ours
+	body.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		args[0].Call("preventDefault")
+		if (args[0].Get("button").Int() == 2) && !JustSelected && !IsMovingMode && !IsResizingMode && !IsDeleteMode && !IsNewMode && !IsHiding {
 			// Clear all previous menu items.
 			for ContextMenu.Get("firstChild").Truthy() {
 				ContextMenu.Call("removeChild", ContextMenu.Get("firstChild"))

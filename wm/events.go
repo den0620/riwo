@@ -140,7 +140,7 @@ func InitializeGlobalMouseEvents() {
 				GhostWindow.Call("remove") // Remove ghost window
 				GhostWindow = js.Null()    // Reset ghost window reference
 			}
-			//JustSelected = false
+			JustSelected = false
 			if Verbose {
 				Print("Dragging ended and window teleported to ghost position.")
 			}
@@ -161,6 +161,7 @@ func InitializeGlobalMouseEvents() {
 			GhostWindow = js.Null()    // Reset ghost window reference
 			// Reset cursor
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+			JustSelected = false
 			if Verbose {
 				Print("Resizing completed and window resized to match selection.")
 			}
@@ -181,6 +182,7 @@ func InitializeGlobalMouseEvents() {
 				GhostWindow.Call("remove")
 				GhostWindow = js.Null()
 				neuwindow := WindowCreate(x, y, width, height, "")
+				JustSelected = false
 				if Verbose {
 					Print("New window created at selected area.")
 				}
