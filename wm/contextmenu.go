@@ -141,6 +141,10 @@ func InitializeContextMenu() {
 						// Execute default callback for this option.
 						customOption.Callback()
 						ContextMenu.Get("style").Set("display", "none") // hide menu after click
+						JustSelected = false
+						if Verbose {
+							Print("Custom option " + customOption.Name + " called")
+						}
 						return nil
 					}))
 					ContextMenu.Call("appendChild", opt)

@@ -30,7 +30,6 @@ func APP_zclock(window *wm.Window) {
     // Create clock display
     clockDisplay := document.Call("createElement", "div")
     clockDisplay.Get("style").Set("fontSize", "4em")
-    clockDisplay.Get("style").Set("fontFamily", "monospace")
     clockDisplay.Get("style").Set("color", wm.GetColor["aqua"]["vivid"])
     
     // Settings container

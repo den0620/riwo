@@ -13,6 +13,8 @@ It uses [syscall/js](https://pkg.go.dev/syscall/js) to manipulate DOM and mimic 
 
 Windows are \<div\>s with html inside
 
+Credits to Go team for their [Go fonts](https://go.dev/blog/go-fonts)
+
 Try it here: [deployment](https://ninefid.uk.to/riwo)
 
 ## Roadmap
