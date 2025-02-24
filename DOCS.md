@@ -1,3 +1,5 @@
+# THESE DOCS ARE OUT OF DATE
+
 This was done primary for me to navigate in my shit
 
 To be done

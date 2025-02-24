@@ -10,14 +10,11 @@ func init() {
     AppRegistry["ZClock"] = APP_zclock
 }
 
-var (
-    isSettings bool
-	currentTheme string = "aqua"
-)
 
 func APP_zclock(window *wm.Window) {
     document := js.Global().Get("document")
-    isSettings = false
+	isSettings := false
+	currentTheme := "aqua"
     
     // Create main container
     container := document.Call("createElement", "div")

@@ -6,12 +6,6 @@ import (
 )
 
 
-var (
-	themeColor string = "green"
-	colorFG string = wm.GetColor[themeColor]["vivid"]
-	colorBG string = wm.GetColor[themeColor]["faded"]
-	colorMG string = wm.GetColor[themeColor]["normal"]
-)
 func init() {
     // Register the default app itself.
     AppRegistry["Default"] = APP_default
@@ -20,13 +14,17 @@ func init() {
 
 func APP_default(window *wm.Window) {
     document := js.Global().Get("document")
+	themeColor := "green"
+	colorFG := wm.GetColor[themeColor]["vivid"]
+	colorBG := wm.GetColor[themeColor]["faded"]
+	colorMG := wm.GetColor[themeColor]["normal"]
 
     // Create a container div for the grid
     container := document.Call("createElement", "div")
     container.Get("style").Set("display", "grid")
     container.Get("style").Set("gridTemplateColumns", "repeat(auto-fit, minmax(120px, 1fr))")
-    container.Get("style").Set("gap", "15px")
-    container.Get("style").Set("padding", "20px")
+    container.Get("style").Set("gap", "5%")
+    container.Get("style").Set("padding", "5%")
     container.Get("style").Set("height", "100%")
     container.Get("style").Set("background", colorBG)
 
@@ -44,7 +42,7 @@ func APP_default(window *wm.Window) {
     for appName, appFunc := range AppRegistry {
         /*if appName == "Default" {
             continue
-        }*/
+        }*/ // This can be used to skip default app itself
 
         btnContainer := document.Call("createElement", "div")
         btnContainer.Get("style").Set("textAlign", "center")

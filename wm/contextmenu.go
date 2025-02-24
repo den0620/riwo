@@ -18,7 +18,9 @@ func InitializeContextMenu() {
 	// Create the context menu container.
 	ContextMenu = document.Call("createElement", "div")
 	ContextMenu.Set("id", "contextMenu")
-	menuStyle := "position: absolute; display: none; background-color: #EEFFEE; border: solid #8BCE8B; padding: 0; text-align: center;"
+	menuStyle := "position: absolute; display: none; background-color: " +
+		GetColor["green"]["faded"] + "; border: solid " + GetColor["green"]["normal"] +
+		"; padding: 0; text-align: center;"
 	ContextMenu.Set("style", menuStyle)
 	body.Call("appendChild", ContextMenu)
 
@@ -176,11 +178,11 @@ func CreateMenuOption(optionText string) js.Value {
 	option.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
 	option.Get("style").Set("padding", "10px")
 	option.Call("addEventListener", "mouseover", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		option.Get("style").Set("background-color", "#418941")
+		option.Get("style").Set("background-color", GetColor["green"]["vivid"])
 		return nil
 	}))
 	option.Call("addEventListener", "mouseout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		option.Get("style").Set("background-color", "#EEFFEE")
+		option.Get("style").Set("background-color", GetColor["green"]["faded"])
 		return nil
 	}))
 	return option
