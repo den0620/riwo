@@ -59,7 +59,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 
 	// Bring to front when clicked
 	winElem.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		if !IsResizingMode {
+		if !IsResizingInit {
 			CurrentWindow = neuwindow
 			ActiveWindow = winElem
 		}
