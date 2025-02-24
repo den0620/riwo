@@ -59,8 +59,10 @@ func WindowCreate(x, y, width, height, content string) *Window {
 
 	// Bring to front when clicked
 	winElem.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		CurrentWindow = neuwindow
-		ActiveWindow = winElem
+		if !IsResizingMode {
+			CurrentWindow = neuwindow
+			ActiveWindow = winElem
+		}
 		// Right-click (RMB) on the window to select it for resizing, second right-click activates resizing
 		if IsResizingMode && !IsResizingInit && args[0].Get("button").Int() == 2 {
 			// First RMB hold - Select the window for resizing
