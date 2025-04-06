@@ -13,6 +13,8 @@ It uses [syscall/js](https://pkg.go.dev/syscall/js) to manipulate DOM and mimic 
 
 Windows are \<div\>s with html inside
 
+Better documentation soon™️
+
 Credits to Go team for their [Go fonts](https://go.dev/blog/go-fonts)
 
 Try it here: [deployment](https://ninefid.uk.to/riwo)
@@ -32,8 +34,9 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 - [x] Starter (`Default`)
 - [x] Clock (`ZClock`)
 - [x] Audio player (`DPlayer`)
-- [ ] Themer
-- [ ] Mahjongg
+- [ ] Gallery ()
+- [ ] Themer ()
+- [ ] Mahjongg ()
 
 ## Possible known issues
 
