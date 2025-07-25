@@ -198,5 +198,4 @@ func InitializeGlobalMouseEvents() {
 
 		return nil
 	}))
-	return
 }

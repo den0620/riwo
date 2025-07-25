@@ -74,16 +74,16 @@ func Construct(window *wm.Window) {
 			return nil
 		}
 
-		// prepare expected button
 		appButton.
 			Inner(appName).
 			Callback("mousedown", init).
 			Callback("mouseover", over).
 			Callback("mouseout", out)
 
-		buttonContainer.Append(appButton)
+		buttonContainer.
+			Append(appButton).
+			Mount(container)
 
-		container.Append(buttonContainer)
 	}
 
 	window.DOM.Set("innerHTML", "")

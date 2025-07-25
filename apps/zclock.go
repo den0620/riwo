@@ -8,13 +8,13 @@ import (
 )
 
 func init() {
-	AppRegistry["ZClock"] = ClockConstruct
+	AppRegistry["ZClock"] = clockConstruct
 }
 
-func ClockConstruct(window *wm.Window) {
+func clockConstruct(window *wm.Window) {
 	fg := wm.ThemeMap["aqua"]["normal"]
 	mg := wm.ThemeMap["aqua"]["vivid"]
-	bg := wm.ThemeMap["aqua"][""]
+	bg := wm.ThemeMap["aqua"]["faded"]
 
 	container := wm.Create()
 	container.
@@ -96,7 +96,9 @@ func ClockConstruct(window *wm.Window) {
 	themeKey := "aqua"
 
 	for key, theme := range wm.ThemeMap { // <-- not sure
-		wm.Print(fmt.Sprintf("\tTheme[%s] -> %v", key, theme))
+		if wm.Verbose {
+			wm.Print(fmt.Sprintf("\tTheme[%s] -> %v", key, theme))
+		}
 		themeButton := wm.Create()
 
 		applyTheme(themeButton, theme)
