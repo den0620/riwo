@@ -10,7 +10,8 @@ import (
 	"syscall/js"
 )
 
-// InitializeGlobalMouseEvents sets up global mouse event listeners.
+// InitializeGlobalMouseEvents
+// sets up global mouse event listeners.
 func InitializeGlobalMouseEvents() {
 	// Moving mouse
 	js.Global().Get("document").Call("addEventListener", "mousemove", js.FuncOf(func(this js.Value, args []js.Value) interface{} {

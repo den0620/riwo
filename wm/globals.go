@@ -29,7 +29,7 @@ var (
 	WindowCount      int       // Counter for creating multiple windows with unique z-index
 	HighestZIndex    int  = 10 // Track the highest z-index for bringing windows to front
 	Verbose          bool = false
-	GetColor              = map[string]map[string]string{
+	ThemeMap              = map[string]map[string]string{
 		"monochrome": {
 			"faded":  "#ffffff",
 			"normal": "#777777",

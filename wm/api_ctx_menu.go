@@ -19,7 +19,7 @@ func InitializeContextMenu() {
 	ContextMenu = document.Call("createElement", "div")
 	ContextMenu.Set("id", "contextMenu")
 	menuStyle := "position: absolute; display: none; background-color: " +
-		GetColor["green"]["faded"] + "; border: solid " + GetColor["green"]["normal"] +
+		ThemeMap["green"]["faded"] + "; border: solid " + ThemeMap["green"]["normal"] +
 		"; padding: 0; text-align: center;"
 	ContextMenu.Set("style", menuStyle)
 	body.Call("appendChild", ContextMenu)
@@ -170,7 +170,8 @@ func InitializeContextMenu() {
 	}))
 }
 
-// CreateMenuOption creates a new context menu option element.
+// CreateMenuOption
+// creates a new context menu option element.
 func CreateMenuOption(optionText string) js.Value {
 	document := js.Global().Get("document")
 	option := document.Call("createElement", "div")
@@ -178,17 +179,18 @@ func CreateMenuOption(optionText string) js.Value {
 	option.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
 	option.Get("style").Set("padding", "10px")
 	option.Call("addEventListener", "mouseover", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		option.Get("style").Set("background-color", GetColor["green"]["vivid"])
+		option.Get("style").Set("background-color", ThemeMap["green"]["vivid"])
 		return nil
 	}))
 	option.Call("addEventListener", "mouseout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		option.Get("style").Set("background-color", GetColor["green"]["faded"])
+		option.Get("style").Set("background-color", ThemeMap["green"]["faded"])
 		return nil
 	}))
 	return option
 }
 
-// RemoveMenuOption removes a given menu option from the context menu.
+// RemoveMenuOption
+// removes a given menu option from the context menu.
 func RemoveMenuOption(option js.Value) {
 	document := js.Global().Get("document")
 	menu := document.Call("getElementById", "contextMenu")

@@ -14,7 +14,7 @@ func AppTest(window *wm.Window) {
 
 	// prepare styles
 	container.
-		Style("background", wm.GetColor["green"]["faded"]).
+		Style("background", wm.ThemeMap["green"]["faded"]).
 		Style("gap", "5%").
 		Style("padding", "5%").
 		Style("height", "100%").
@@ -28,6 +28,6 @@ func AppTest(window *wm.Window) {
 		Style("marginBotton", "20px").
 		Mount(container) // <-- add element to parent
 
-	window.Element.Set("innerHTML", "")
-	window.Element.Call("appendChild", container.Get()) // <-- ideas??
+	window.DOM.Set("innerHTML", "")
+	window.DOM.Call("appendChild", container.Get()) // <-- ideas??
 }

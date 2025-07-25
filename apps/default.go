@@ -7,80 +7,86 @@ import (
 
 func init() {
 	// Register the default app itself.
-	AppRegistry["Default"] = APP_default
+	AppRegistry["Default"] = Construct
 }
 
-func APP_default(window *wm.Window) {
-	document := js.Global().Get("document")
-	themeColor := "green"
-	colorFG := wm.GetColor[themeColor]["vivid"]
-	colorBG := wm.GetColor[themeColor]["faded"]
-	colorMG := wm.GetColor[themeColor]["normal"]
+func Construct(window *wm.Window) {
+	bg := wm.ThemeMap["green"]["faded"]
+	mg := wm.ThemeMap["green"]["vivid"]
+	fg := wm.ThemeMap["green"]["normal"]
 
-	// Create a container div for the grid
-	container := document.Call("createElement", "div")
-	container.Get("style").Set("display", "grid")
-	container.Get("style").Set("gridTemplateColumns", "repeat(auto-fit, minmax(120px, 1fr))")
-	container.Get("style").Set("gap", "5%")
-	container.Get("style").Set("padding", "5%")
-	container.Get("style").Set("height", "100%")
-	container.Get("style").Set("background", colorBG)
+	container := wm.Create()
+	container.
+		Style("display", "grid").
+		Style("gridTemplateColumns", "repeat(auto-fit, minmax(120px, 1fr))").
+		Style("background", bg).
+		Style("gap", "5%").
+		Style("padding", "5%").
+		Style("height", "100%")
 
-	// Create a title
-	title := document.Call("createElement", "div")
-	title.Set("innerHTML", "Applications")
-	title.Get("style").Set("gridColumn", "1 / -1")
-	title.Get("style").Set("fontSize", "24px")
-	title.Get("style").Set("textAlign", "center")
-	title.Get("style").Set("marginBottom", "20px")
-	title.Get("style").Set("color", colorFG)
-	container.Call("appendChild", title)
+	title := wm.CreateKnown("h3")
+	title.
+		Inner("Applications").
+		Style("gridColumn", "1 / -1").
+		Style("fontSize", "24px").
+		Style("color", fg).
+		Style("textAlign", "center").
+		Style("marginBotton", "20px").
+		Mount(container)
 
-	// Iterate over AppRegistry and create a button for each app
-	for appName, appFunc := range AppRegistry {
-		/*if appName == "Default" {
-		    continue
-		}*/ // This can be used to skip default app itself
+	// This is an system Application
+	// Get other registered applications
+	for appName, appInit := range AppRegistry {
+		wm.Print(appName)
+		buttonContainer := wm.
+			Create().
+			Style("textAlign", "center")
 
-		btnContainer := document.Call("createElement", "div")
-		btnContainer.Get("style").Set("textAlign", "center")
+		appButton := wm.
+			Create().
+			Style("color", fg).
+			Style("background", mg).
+			Style("cursor", "url(assets/cursor-inverted.svg), auto").
+			Style("padding", "15px").
+			Style("borderRadius", "0").Style("border", "solid "+mg).
+			Style("transition", "all 0.2s ease").
+			Style("userSelect", "none")
 
-		btn := document.Call("createElement", "div")
-		btn.Set("innerText", appName)
-		btn.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
-		btn.Get("style").Set("padding", "15px")
-		btn.Get("style").Set("background", colorBG)
-		btn.Get("style").Set("color", "black")
-		btn.Get("style").Set("borderRadius", "0")
-		btn.Get("style").Set("border", "solid "+colorMG)
-		btn.Get("style").Set("transition", "all 0.2s ease")
-		btn.Get("style").Set("userSelect", "none")
-
-		// Hover effects
-		btn.Call("addEventListener", "mouseover", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-			btn.Get("style").Set("background", colorFG)
-			btn.Get("style").Set("color", colorBG)
-			return nil
-		}))
-		btn.Call("addEventListener", "mouseout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-			btn.Get("style").Set("background", colorBG)
-			btn.Get("style").Set("color", "black")
-			return nil
-		}))
-
-		// Click handler
-		btn.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// prepare callbacks
+		init := func(this js.Value, args []js.Value) interface{} {
 			if wm.Verbose {
 				wm.Print("App " + appName + " selected")
 			}
-			appFunc(window)
+			appInit(window)
 			return nil
-		}))
+		}
+		over := func(this js.Value, args []js.Value) interface{} {
+			appButton.
+				Style("background", fg).
+				Style("color", bg)
 
-		btnContainer.Call("appendChild", btn)
-		container.Call("appendChild", btnContainer)
+			return nil
+		}
+		out := func(this js.Value, args []js.Value) interface{} {
+			appButton.
+				Style("background", bg).
+				Style("color", fg)
+
+			return nil
+		}
+
+		// prepare expected button
+		appButton.
+			Inner(appName).
+			Callback("mousedown", init).
+			Callback("mouseover", over).
+			Callback("mouseout", out)
+
+		buttonContainer.Append(appButton)
+
+		container.Append(buttonContainer)
 	}
 
-	window.Element.Set("innerHTML", "")
-	window.Element.Call("appendChild", container)
+	window.DOM.Set("innerHTML", "")
+	window.DOM.Call("appendChild", container.Get())
 }

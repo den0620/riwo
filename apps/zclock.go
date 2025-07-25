@@ -22,12 +22,12 @@ func APP_zclock(window *wm.Window) {
 	container.Get("style").Set("flexDirection", "column")
 	container.Get("style").Set("justifyContent", "center")
 	container.Get("style").Set("alignItems", "center")
-	container.Get("style").Set("backgroundColor", wm.GetColor["aqua"]["faded"])
+	container.Get("style").Set("backgroundColor", wm.ThemeMap["aqua"]["faded"])
 
 	// Create clock display
 	clockDisplay := document.Call("createElement", "div")
 	clockDisplay.Get("style").Set("fontSize", "4em")
-	clockDisplay.Get("style").Set("color", wm.GetColor["aqua"]["vivid"])
+	clockDisplay.Get("style").Set("color", wm.ThemeMap["aqua"]["vivid"])
 
 	// Settings container with simplified styling
 	settingsContainer := document.Call("createElement", "div")
@@ -40,7 +40,7 @@ func APP_zclock(window *wm.Window) {
 	settingsTitle.Set("textContent", "Clock Settings")
 	settingsTitle.Get("style").Set("fontSize", "1.5em")
 	settingsTitle.Get("style").Set("marginBottom", "15px")
-	settingsTitle.Get("style").Set("color", wm.GetColor["aqua"]["vivid"])
+	settingsTitle.Get("style").Set("color", wm.ThemeMap["aqua"]["vivid"])
 
 	// UTC adjustment section
 	utcSection := document.Call("createElement", "div")
@@ -67,9 +67,9 @@ func APP_zclock(window *wm.Window) {
 	styleUtcButton := func(btn js.Value, theme string) {
 		btn.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
 		btn.Get("style").Set("padding", "10px 20px")
-		btn.Get("style").Set("backgroundColor", wm.GetColor[theme]["faded"])
+		btn.Get("style").Set("backgroundColor", wm.ThemeMap[theme]["faded"])
 		btn.Get("style").Set("color", "black")
-		btn.Get("style").Set("border", "solid "+wm.GetColor[theme]["vivid"])
+		btn.Get("style").Set("border", "solid "+wm.ThemeMap[theme]["vivid"])
 		btn.Get("style").Set("borderRadius", "0")
 	}
 
@@ -105,27 +105,27 @@ func APP_zclock(window *wm.Window) {
 		themeBtn.Get("style").Set("padding", "10px")
 		themeBtn.Get("style").Set("textAlign", "center")
 		themeBtn.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
-		themeBtn.Get("style").Set("backgroundColor", wm.GetColor[theme]["faded"])
+		themeBtn.Get("style").Set("backgroundColor", wm.ThemeMap[theme]["faded"])
 		themeBtn.Get("style").Set("color", "black")
-		themeBtn.Get("style").Set("border", "solid "+wm.GetColor[theme]["vivid"])
+		themeBtn.Get("style").Set("border", "solid "+wm.ThemeMap[theme]["vivid"])
 		themeBtn.Get("style").Set("borderRadius", "0")
 		themeBtn.Set("textContent", theme)
 
 		// Theme selection handler
 		themeBtn.Call("addEventListener", "mouseover", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-			themeBtn.Get("style").Set("backgroundColor", wm.GetColor[theme]["normal"])
+			themeBtn.Get("style").Set("backgroundColor", wm.ThemeMap[theme]["normal"])
 			return nil
 		}))
 		themeBtn.Call("addEventListener", "mouseout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-			themeBtn.Get("style").Set("backgroundColor", wm.GetColor[theme]["faded"])
+			themeBtn.Get("style").Set("backgroundColor", wm.ThemeMap[theme]["faded"])
 			return nil
 		}))
 		themeBtn.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 			newTheme := this.Get("textContent").String()
 			currentTheme = newTheme
-			container.Get("style").Set("backgroundColor", wm.GetColor[newTheme]["faded"])
-			clockDisplay.Get("style").Set("color", wm.GetColor[newTheme]["vivid"])
-			settingsTitle.Get("style").Set("color", wm.GetColor[newTheme]["vivid"])
+			container.Get("style").Set("backgroundColor", wm.ThemeMap[newTheme]["faded"])
+			clockDisplay.Get("style").Set("color", wm.ThemeMap[newTheme]["vivid"])
+			settingsTitle.Get("style").Set("color", wm.ThemeMap[newTheme]["vivid"])
 			// Update UTC buttons style
 			styleUtcButton(utcDecrease, newTheme)
 			styleUtcButton(utcIncrease, newTheme)
@@ -137,11 +137,11 @@ func APP_zclock(window *wm.Window) {
 
 	// UTC button handlers
 	utcDecrease.Call("addEventListener", "mouseover", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		utcDecrease.Get("style").Set("backgroundColor", wm.GetColor[currentTheme]["normal"])
+		utcDecrease.Get("style").Set("backgroundColor", wm.ThemeMap[currentTheme]["normal"])
 		return nil
 	}))
 	utcDecrease.Call("addEventListener", "mouseout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		utcDecrease.Get("style").Set("backgroundColor", wm.GetColor[currentTheme]["faded"])
+		utcDecrease.Get("style").Set("backgroundColor", wm.ThemeMap[currentTheme]["faded"])
 		return nil
 	}))
 	utcDecrease.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -153,11 +153,11 @@ func APP_zclock(window *wm.Window) {
 	}))
 
 	utcIncrease.Call("addEventListener", "mouseover", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		utcIncrease.Get("style").Set("backgroundColor", wm.GetColor[currentTheme]["normal"])
+		utcIncrease.Get("style").Set("backgroundColor", wm.ThemeMap[currentTheme]["normal"])
 		return nil
 	}))
 	utcIncrease.Call("addEventListener", "mouseout", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		utcIncrease.Get("style").Set("backgroundColor", wm.GetColor[currentTheme]["faded"])
+		utcIncrease.Get("style").Set("backgroundColor", wm.ThemeMap[currentTheme]["faded"])
 		return nil
 	}))
 	utcIncrease.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -236,8 +236,8 @@ func APP_zclock(window *wm.Window) {
 	container.Call("appendChild", settingsContainer)
 
 	// Clear window and add container
-	window.Element.Set("innerHTML", "")
-	window.Element.Call("appendChild", container)
+	window.DOM.Set("innerHTML", "")
+	window.DOM.Call("appendChild", container)
 
 	// Start the clock
 	updateClock.Invoke()

@@ -10,20 +10,21 @@ import (
 	"syscall/js"
 )
 
-
 // Define a named type for the context entry.
 type ContextEntry struct {
-    Name     string
-    Callback func()
+	Name     string
+	Callback func()
 }
+
 // Type `Window` manages single abstract window’s properties.
 type Window struct {
-	ID      int      // For the most part unites DOM object and Go object
-	Element js.Value // Connected DOM element.
+	ID             int            // For the most part unites DOM object and Go object
+	DOM            js.Value       // Connected DOM element.
 	ContextEntries []ContextEntry // Tho "Move", "Resize", "Delete" and "Hide" are basic ones
 }
 
-// NewWindow creates a new Window, sets up its DOM element, and returns a pointer to it.
+// WindowCreate
+// Creates a new Window, sets up its DOM element, and returns a pointer.
 func WindowCreate(x, y, width, height, content string) *Window {
 	WindowCount++
 	id := WindowCount
@@ -48,19 +49,19 @@ func WindowCreate(x, y, width, height, content string) *Window {
 			strconv.Itoa(id) + "\"")
 	}
 
-	neuwindow := &Window{
-		ID:      id,
-		Element: winElem,
+	window := &Window{
+		ID:  id,
+		DOM: winElem,
 		// No custom ContextEntries
 	}
-	CurrentWindow = neuwindow
+	CurrentWindow = window
 	ActiveWindow = winElem
-	AllWindows[strconv.Itoa(neuwindow.ID)] = neuwindow
+	AllWindows[strconv.Itoa(window.ID)] = window // <--
 
 	// Bring to front when clicked
 	winElem.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		if !IsResizingInit {
-			CurrentWindow = neuwindow
+			CurrentWindow = window
 			ActiveWindow = winElem
 		}
 		// Right-click (RMB) on the window to select it for resizing, second right-click activates resizing
@@ -114,12 +115,12 @@ func WindowCreate(x, y, width, height, content string) *Window {
 				JustSelected = true
 				IsHiding = false
 
-				hiddenWindowOption := CreateMenuOption("wid " + strconv.Itoa(neuwindow.ID))
+				hiddenWindowOption := CreateMenuOption("wid " + strconv.Itoa(window.ID))
 				if winElem.Get("title").String() != "" {
 					hiddenWindowOption = CreateMenuOption(winElem.Get("title").String())
 				}
 
-				hiddenWindowOption.Set("id", "menuopt"+strconv.Itoa(neuwindow.ID))
+				hiddenWindowOption.Set("id", "menuopt"+strconv.Itoa(window.ID))
 				// Unhide option activation
 				hiddenWindowOption.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 					if args[0].Get("button").Int() == 2 {
@@ -147,7 +148,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 				js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
 				JustSelected = false
 				if Verbose {
-					Print("WID " + strconv.Itoa(neuwindow.ID) + " hidden")
+					Print("WID " + strconv.Itoa(window.ID) + " hidden")
 				}
 
 			}
@@ -157,7 +158,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 			args[0].Call("preventDefault")
 			args[0].Call("stopPropagation")
 			JustSelected = true
-			WindowRemove(neuwindow)
+			WindowRemove(window)
 			IsDeleteMode = false
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
 			JustSelected = false
@@ -168,21 +169,22 @@ func WindowCreate(x, y, width, height, content string) *Window {
 		return nil
 	}))
 
-	return neuwindow
+	return window
 }
 
-// Sets pos and dimensions for the window. (Actually useless)
-func (w *Window) WindowEditPos(newX, newY, newWidth, newHeight string) {
-	w.Element.Get("style").Set("left", newX)
-	w.Element.Get("style").Set("top", newY)
-	w.Element.Get("style").Set("width", newWidth)
-	w.Element.Get("style").Set("height", newHeight)
+// Position
+// Sets position and dimensions for the window. (Actually useless)
+func (w *Window) Position(newX, newY, newWidth, newHeight string) {
+	w.DOM.Get("style").Set("left", newX)
+	w.DOM.Get("style").Set("top", newY)
+	w.DOM.Get("style").Set("width", newWidth)
+	w.DOM.Get("style").Set("height", newHeight)
 }
 
+// WindowRemove
 // Deletes the window from DOM and Go.
 func WindowRemove(w *Window) {
 	w.ID = -1                              // Remove reference for apps
-	w.Element.Call("remove")               // Remove html part
+	w.DOM.Call("remove")                   // Remove html part
 	delete(AllWindows, strconv.Itoa(w.ID)) // Remove from list
-	return
 }
