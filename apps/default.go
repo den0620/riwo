@@ -37,7 +37,6 @@ func Construct(window *wm.Window) {
 	// This is an system Application
 	// Get other registered applications
 	for appName, appInit := range AppRegistry {
-		wm.Print(appName)
 		buttonContainer := wm.
 			Create().
 			Style("textAlign", "center")
@@ -88,5 +87,5 @@ func Construct(window *wm.Window) {
 	}
 
 	window.DOM.Set("innerHTML", "")
-	window.DOM.Call("appendChild", container.Get())
+	window.DOM.Call("appendChild", container.DOM())
 }

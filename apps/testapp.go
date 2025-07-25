@@ -22,12 +22,12 @@ func AppTest(window *wm.Window) {
 
 	title := wm.Create()
 	title.
-		Inner("Applications"). // <-- text inside title container
+		Inner("RIWO App"). // <-- text inside title container
 		Style("fontSize", "24px").
 		Style("textAlign", "center").
 		Style("marginBotton", "20px").
 		Mount(container) // <-- add element to parent
 
 	window.DOM.Set("innerHTML", "")
-	window.DOM.Call("appendChild", container.Get()) // <-- ideas??
+	window.DOM.Call("appendChild", container.DOM()) // <-- ideas??
 }

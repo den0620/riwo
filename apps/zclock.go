@@ -1,16 +1,17 @@
 package apps
 
 import (
+	"fmt"
 	"riwo/wm"
 	"strconv"
 	"syscall/js"
 )
 
 func init() {
-	AppRegistry["ZClock"] = APP_zclock
+	AppRegistry["ZClock"] = ClockConstruct
 }
 
-func APP_zclock(window *wm.Window) {
+func AppZClock(window *wm.Window) {
 	document := js.Global().Get("document")
 	isSettings := false
 	currentTheme := "aqua"
@@ -241,4 +242,232 @@ func APP_zclock(window *wm.Window) {
 
 	// Start the clock
 	updateClock.Invoke()
+}
+
+func ClockConstruct(window *wm.Window) {
+	fg := wm.ThemeMap["aqua"]["normal"]
+	mg := wm.ThemeMap["aqua"]["vivid"]
+	bg := wm.ThemeMap["aqua"][""]
+
+	container := wm.Create()
+	container.
+		Style("height", "100%").
+		Style("display", "flex").
+		Style("flexDirection", "column").
+		Style("justifyContent", "center").
+		Style("alignItems", "center").
+		Style("backgroundColor", bg)
+
+	clock := wm.Create()
+	clock.
+		Style("fontSize", "4em").
+		Style("color", fg)
+
+	// simple container styling :D
+	settings := wm.Create()
+	settings.
+		Style("display", "none").
+		Style("padding", "20px").
+		Style("textAlign", "center")
+
+	settingsTitle := wm.Create()
+	settingsTitle.
+		Text("Clock Settings").
+		Style("fontSize", "1.5em").
+		Style("marginBottom", "15px").
+		Style("color", mg)
+
+	settingsUtc := wm.Create()
+	settingsUtc.Style("marginBottom", "15px")
+
+	utc := wm.Create().
+		Style("display", "flex").
+		Style("alignItems", "center").
+		Style("justifyContent", "center").
+		Style("gap", "10px")
+
+	utcLabel := wm.Create()
+	utcLabel.
+		Text("UTC Offset").
+		Style("cursor", "url(assets/cursor.svg), auto").
+		Style("marginBottom", "5px")
+
+	utcInput := wm.Create()
+	utcInput.
+		Text("7").
+		Style("minWidth", "30px").
+		Style("textAlign", "center")
+
+	utcHourIncrase := wm.Create()
+	utcHourDecrase := wm.Create()
+
+	utcHourIncrase.
+		Style("cursor", "url(assets/cursor-inverted.svg), auto").
+		Style("padding", "10px, 20px").
+		Style("color", "#000000").
+		Style("backgroundColor", bg).
+		Style("border", "solid "+mg).
+		Style("borderRadius", 0).
+		Text("+")
+	utcHourDecrase.
+		Style("cursor", "url(assets/cursor-inverted.svg), auto").
+		Style("padding", "10px, 20px").
+		Style("color", "#000000").
+		Style("backgroundColor", bg).
+		Style("border", "solid "+mg).
+		Style("borderRadius", 0).
+		Text("-")
+
+	themesPanel := wm.Create()
+	themesPanel.
+		Style("display", "grid").
+		Style("gridTemplateColumns", "repeat(4, 1fr)").
+		Style("gap", "8px").
+		Style("maxWidth", "400px").
+		Style("margin", "0 auto")
+
+	themeKey := "aqua"
+
+	for key, theme := range wm.ThemeMap { // <-- not sure
+		wm.Print(fmt.Sprintf("\tTheme[%s] -> %v", key, theme))
+		themeButton := wm.Create()
+
+		applyTheme(themeButton, theme)
+
+		out := func(this js.Value, args []js.Value) interface{} {
+			themeButton.Style("backgroundColor", wm.ThemeMap[key]["faded"])
+			return nil
+		}
+		over := func(this js.Value, args []js.Value) interface{} {
+			themeButton.Style("backgroundColor", wm.ThemeMap[key]["normal"])
+			return nil
+		}
+
+		click := func(this js.Value, args []js.Value) interface{} {
+			newTheme := this.Get("textContent").String()
+
+			container.Style("backgroundColor", wm.ThemeMap[newTheme]["faded"])
+			clock.Style("color", wm.ThemeMap[newTheme]["vivid"])
+			settingsTitle.Style("color", wm.ThemeMap[newTheme]["vivid"])
+
+			applyTheme(utcHourDecrase, wm.ThemeMap[newTheme])
+			applyTheme(utcHourIncrase, wm.ThemeMap[newTheme])
+
+			themeKey = newTheme
+			return nil
+		}
+		themeButton.
+			Text(key).
+			Callback("mouseover", over).
+			Callback("mouseout", out).
+			Callback("mousedown", click).
+			Mount(themesPanel)
+	}
+	// Poop the bank
+	decrDecorateMouseOver := func(this js.Value, args []js.Value) interface{} {
+		utcHourDecrase.Style("backgroundColor", wm.ThemeMap[themeKey]["normal"])
+		return nil
+	}
+	decrDecorateMouseOut := func(this js.Value, args []js.Value) interface{} {
+		utcHourDecrase.Style("backgroundColor", wm.ThemeMap[themeKey]["faded"])
+		return nil
+	}
+	decrClick := func(this js.Value, args []js.Value) interface{} {
+		current, _ := strconv.Atoi(utcInput.DOM().Get("textContent").String())
+		if current > -12 {
+			utcInput.Text(strconv.Itoa(current - 1))
+		}
+		return nil
+	}
+	incrDecorateMouseOver := func(this js.Value, args []js.Value) interface{} {
+		utcHourIncrase.Style("backgroundColor", wm.ThemeMap[themeKey]["normal"])
+		return nil
+	}
+	incrDecorateMouseOut := func(this js.Value, args []js.Value) interface{} {
+		utcHourIncrase.Style("backgroundColor", wm.ThemeMap[themeKey]["faded"])
+		return nil
+	}
+	incrClick := func(this js.Value, args []js.Value) interface{} {
+		current, _ := strconv.Atoi(utcInput.DOM().Get("textContent").String())
+		if current > -12 {
+			utcInput.Text(strconv.Itoa(current + 1))
+		}
+		return nil
+	}
+
+	// i'M rEaLLy NoT OkaY
+
+	utcHourDecrase.
+		Callback("mouseover", decrDecorateMouseOver).
+		Callback("mouseout", decrDecorateMouseOut).
+		Callback("mousedown", decrClick)
+	utcHourIncrase.
+		Callback("mouseover", incrDecorateMouseOver).
+		Callback("mouseout", incrDecorateMouseOut).
+		Callback("mousedown", incrClick)
+
+	// not 9:30 -> 09:30 is better
+	formatTime := func(n int) string {
+		if n < 10 {
+			return "0" + strconv.Itoa(n)
+		}
+		return strconv.Itoa(n)
+	}
+
+	var updateClock js.Func
+	updateClock = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		now := js.Global().Get("Date").New()
+		utcOffset, _ := strconv.Atoi(utcInput.DOM().Get("textContent").String())
+
+		hours := (now.Call("getUTCHours").Int() + utcOffset + 24) % 24
+		minutes := now.Call("getUTCMinutes").Int()
+		seconds := now.Call("getUTCSeconds").Int()
+
+		timeStr := formatTime(hours) + ":" + formatTime(minutes) + ":" + formatTime(seconds)
+		clock.Text(timeStr)
+
+		// Schedule next update
+		js.Global().Call("setTimeout", updateClock, 1000)
+		return nil
+	})
+
+	isSettingsShown := false
+
+	window.ContextEntries = []wm.ContextEntry{
+		{
+			Name: "Settings",
+			Callback: func() {
+				isSettingsShown = !isSettingsShown
+				if isSettingsShown {
+					settings.Style("display", "block")
+					clock.Style("display", "none")
+				} else {
+					settings.Style("display", "none")
+					clock.Style("display", "block")
+				}
+				if wm.Verbose {
+					wm.Print("zclock settings toggled: " + strconv.FormatBool(isSettingsShown))
+				}
+			},
+		},
+	}
+	utc.Append(utcHourDecrase, utcInput, utcHourIncrase)
+	settingsUtc.Append(utcLabel, utc)
+
+	settings.Append(settingsUtc, themesPanel)
+	container.Append(clock, settings)
+	window.DOM.Set("innerHTML", "")
+	window.DOM.Call("appendChild", container.DOM())
+
+	updateClock.Invoke()
+}
+
+func applyTheme(e *wm.RiwoElement, theme map[string]string) {
+	e.
+		Style("cursor", "url(assets/cursor-inverted.svg), auto").
+		Style("padding", "10px, 20px").
+		Style("color", "#000000").
+		Style("backgroundColor", theme["vivid"]).
+		Style("border", "solid "+theme["vivid"]).
+		Style("borderRadius", 0)
 }

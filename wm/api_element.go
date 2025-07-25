@@ -99,8 +99,8 @@ func (e *RiwoElement) Mount(parent *RiwoElement) *RiwoElement {
 	return e
 }
 
-// Get
+// DOM
 // returns JavaScript data structure for current RiwoElement
-func (e *RiwoElement) Get() js.Value {
+func (e *RiwoElement) DOM() js.Value {
 	return e.jsValue
 }
