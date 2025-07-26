@@ -19,7 +19,7 @@ type ContextEntry struct {
 // Type `RiwoWindow` manages single abstract window’s properties.
 type RiwoWindow struct {
 	ID          int            // For the most part unites DOM object and Go object
-	Content     *RiwoElement   // Connected DOM element.
+	Content     *RiwoObject    // Connected DOM element.
 	MenuEntries []ContextEntry // Tho "Move", "Resize", "Delete" and "Hide" are basic ones
 }
 
@@ -67,7 +67,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 	AllWindows[strconv.Itoa(window.ID)] = window // <-- why string?????
 
 	// Bring to front when clicked
-	windowContent.Callback("mousedown", func(this js.Value, args []js.Value) interface{} {
+	windowContent.Listen("mousedown", func(this js.Value, args []js.Value) interface{} {
 		if !IsResizingInit {
 			CurrentWindow = window
 			ActiveWindow = *windowContent
@@ -136,29 +136,29 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 				JustSelected = true
 				IsHiding = false
 
-				hiddenWindowOption := CreateMenuOption("wid " + strconv.Itoa(window.ID))
+				hiddenWindowOption := CreateMenuObject("wid " + strconv.Itoa(window.ID))
 
 				if windowContent.From("title").String() != "" {
-					hiddenWindowOption = CreateMenuOption(windowContent.From("title").String())
+					hiddenWindowOption = CreateMenuObject(windowContent.From("title").String())
 				}
 
-				hiddenWindowOption.Set("id", "menuopt"+strconv.Itoa(window.ID))
+				hiddenWindowOption.DOM().Set("id", "menuopt"+strconv.Itoa(window.ID))
 
 				// ??? option activation
-				hiddenWindowOption.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+				hiddenWindowOption.Listen("mousedown", func(this js.Value, args []js.Value) interface{} {
 					if args[0].Get("button").Int() == 2 {
 						args[0].Call("preventDefault")
 						args[0].Call("stopPropagation")
 						JustSelected = true
 
-						RemoveMenuOption(hiddenWindowOption)
+						RemoveMenuOption(hiddenWindowOption.DOM())
 						windowContent.Style("display", "block")
 
-						ContextMenu.Get("style").Set("display", "none")
+						ContextMenu.Style("display", "none")
 
 						// Delete by value
 						for index, value := range ContextMenuHides {
-							if value.Get("id").String() == hiddenWindowOption.Get("id").String() {
+							if value.Get("id").String() == hiddenWindowOption.DOM().Get("id").String() {
 								ContextMenuHides = append(ContextMenuHides[:index], ContextMenuHides[index+1:]...)
 							}
 						}
@@ -168,10 +168,10 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 						}
 					}
 					return nil
-				}))
-				ContextMenuHides = append(ContextMenuHides, hiddenWindowOption)
-				windowContent.Style("display", "none")
+				})
+				ContextMenuHides = append(ContextMenuHides, hiddenWindowOption.DOM())
 
+				windowContent.Style("display", "none")
 				bodyContent.Style("cursor", "url(assets/cursor.svg), auto")
 
 				JustSelected = false

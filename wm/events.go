@@ -126,11 +126,11 @@ func InitializeGlobalMouseEvents() {
 		}
 		// Cancel menu and reset all modes on leftclick.
 		if args[0].Get("button").Int() == 0 {
-			if ContextMenu.Type() == js.TypeUndefined {
+			if ContextMenu.DOM().Type() == js.TypeUndefined {
 				Print("ContextMenu is UNDEFINED!")
 				// Or handle the error appropriately
 			} else {
-				ContextMenu.Get("style").Set("display", "none")
+				ContextMenu.Style("display", "none")
 			}
 			if GhostWindow.DOM().Truthy() && IsDragging {
 				GhostWindow.Call("remove")
@@ -144,6 +144,7 @@ func InitializeGlobalMouseEvents() {
 			IsDeleteMode = false
 			IsNewMode = false
 			IsHiding = false
+
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
 		}
 		return nil

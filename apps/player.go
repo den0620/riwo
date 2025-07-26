@@ -251,7 +251,7 @@ func PlayerConstruct(window *wm.RiwoWindow) {
 		Style("display", "flex").
 		Style("alignItems", "center")
 
-	styleButton := func(b *wm.RiwoElement) {
+	styleButton := func(b *wm.RiwoObject) {
 		b.Style("padding", "5px 15px").
 			Style("backgroundColor", bg).
 			Style("color", "black").
@@ -260,12 +260,12 @@ func PlayerConstruct(window *wm.RiwoWindow) {
 			Style("cursor", "url(assets/cursor-inverted.svg), auto").
 			Style("font-family", "monospace").
 			Style("font-weight", "bold")
-		b.Callback("mouseover", func(this js.Value, args []js.Value) interface{} {
+		b.Listen("mouseover", func(this js.Value, args []js.Value) interface{} {
 			b.Style("background", fg)
 			b.Style("color", bg)
 			return nil
 		})
-		b.Callback("mouseout", func(this js.Value, args []js.Value) interface{} {
+		b.Listen("mouseout", func(this js.Value, args []js.Value) interface{} {
 			b.Style("background", bg)
 			b.Style("color", "black")
 			return nil
@@ -322,8 +322,8 @@ func PlayerConstruct(window *wm.RiwoWindow) {
 		audio.DOM().Set("currentTime", currentTime+10)
 		return nil
 	}
-	prevButton.Callback("mouseup", prevButtonUp)
-	nextButton.Callback("mouseup", nextButtonUp)
+	prevButton.Listen("mouseup", prevButtonUp)
+	nextButton.Listen("mouseup", nextButtonUp)
 
 	playButtonUp := func(this js.Value, args []js.Value) interface{} {
 		if audio.DOM().Get("paused").Bool() {
@@ -380,14 +380,14 @@ func PlayerConstruct(window *wm.RiwoWindow) {
 		return nil
 	}
 
-	fileInput.Callback("change", fileInputChange)
-	audio.Callback("timeupdate", audioUpdate)
-	fileButton.Callback("mouseup", fileUp)
-	volDnButton.Callback("mouseup", volDnUp)
-	volUpButton.Callback("mouseup", volUpUp)
-	playButton.Callback("mouseup", playButtonUp)
-	prevButton.Callback("mouseup", prevButtonUp)
-	nextButton.Callback("mouseup", nextButtonUp)
+	fileInput.Listen("change", fileInputChange)
+	audio.Listen("timeupdate", audioUpdate)
+	fileButton.Listen("mouseup", fileUp)
+	volDnButton.Listen("mouseup", volDnUp)
+	volUpButton.Listen("mouseup", volUpUp)
+	playButton.Listen("mouseup", playButtonUp)
+	prevButton.Listen("mouseup", prevButtonUp)
+	nextButton.Listen("mouseup", nextButtonUp)
 
 	controls.Append(prevButton, playButton, nextButton)
 	controls2.Append(volDnButton, volUpButton, fileButton)

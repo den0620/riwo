@@ -40,7 +40,7 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 
 ## Possible known issues
 
-Menu opens with single RMB click and NOT hold because I found it simpler
+~Menu opens with single RMB click and NOT hold because I found it simpler~
 
 SVG cursors may be junky
 

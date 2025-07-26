@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	ContextMenu      js.Value
+	ContextMenu      RiwoObject
 	ContextMenuHides []js.Value
 	IsDragging       bool
 	IsMovingMode     bool
@@ -24,8 +24,8 @@ var (
 	StartX, StartY   float64
 	AllWindows       map[string]*RiwoWindow // All Go Windows
 	CurrentWindow    *RiwoWindow            // Active Go Window
-	ActiveWindow     RiwoElement            // Active JS window
-	GhostWindow      RiwoElement
+	ActiveWindow     RiwoObject             // Active JS window
+	GhostWindow      RiwoObject
 	WindowCount      int       // Counter for creating multiple windows with unique z-index
 	HighestZIndex    int  = 10 // Track the highest z-index for bringing windows to front
 	Verbose          bool = false

@@ -127,9 +127,9 @@ func clockConstruct(window *wm.RiwoWindow) {
 		}
 		themeButton.
 			Text(key).
-			Callback("mouseover", over).
-			Callback("mouseout", out).
-			Callback("mousedown", click).
+			Listen("mouseover", over).
+			Listen("mouseout", out).
+			Listen("mousedown", click).
 			Mount(themesPanel)
 	}
 	// Poop the bank
@@ -167,13 +167,13 @@ func clockConstruct(window *wm.RiwoWindow) {
 	// i'M rEaLLy NoT OkaY
 
 	utcHourDecrase.
-		Callback("mouseover", decrDecorateMouseOver).
-		Callback("mouseout", decrDecorateMouseOut).
-		Callback("mousedown", decrClick)
+		Listen("mouseover", decrDecorateMouseOver).
+		Listen("mouseout", decrDecorateMouseOut).
+		Listen("mousedown", decrClick)
 	utcHourIncrase.
-		Callback("mouseover", incrDecorateMouseOver).
-		Callback("mouseout", incrDecorateMouseOut).
-		Callback("mousedown", incrClick)
+		Listen("mouseover", incrDecorateMouseOver).
+		Listen("mouseout", incrDecorateMouseOut).
+		Listen("mousedown", incrClick)
 
 	// not 9:30 -> 09:30 is better
 	formatTime := func(n int) string {
@@ -231,7 +231,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 	updateClock.Invoke()
 }
 
-func applyTheme(e *wm.RiwoElement, theme map[string]string) {
+func applyTheme(e *wm.RiwoObject, theme map[string]string) {
 	e.
 		Style("cursor", "url(assets/cursor-inverted.svg), auto").
 		Style("padding", "10px, 20px").

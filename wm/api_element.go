@@ -5,9 +5,9 @@ import (
 	"syscall/js"
 )
 
-// RiwoElement
+// RiwoObject
 // Main container type for WindowManager
-type RiwoElement struct {
+type RiwoObject struct {
 	jsValue js.Value
 }
 
@@ -15,7 +15,7 @@ type RiwoElement struct {
 // Base function for <div> container initialization
 // in Riwo environment
 // (initializes public constructor for RiwoElement)
-func Create() *RiwoElement {
+func Create() *RiwoObject {
 	return CreateKnown("div")
 }
 
@@ -23,8 +23,8 @@ func Create() *RiwoElement {
 // Initializes new container known tag.
 // In example: CreateKnown("div") abcolutely equals Create()
 // (initializes public constructor for RiwoElement)
-func CreateKnown(tag string) *RiwoElement {
-	return &RiwoElement{
+func CreateKnown(tag string) *RiwoObject {
+	return &RiwoObject{
 		jsValue: js.Global().Get("document").Call("createElement", tag),
 	}
 }
@@ -32,27 +32,27 @@ func CreateKnown(tag string) *RiwoElement {
 // CreateFrom
 // Makes new RiwoElement from by given DOM data
 // (initializes private constructor for RiwoElement)
-func CreateFrom(from *js.Value) *RiwoElement {
-	return &RiwoElement{
+func CreateFrom(from *js.Value) *RiwoObject {
+	return &RiwoObject{
 		jsValue: *from,
 	}
 }
 
 // ByID
-func ByID(id string) *RiwoElement {
-	return &RiwoElement{
+func ByID(id string) *RiwoObject {
+	return &RiwoObject{
 		jsValue: js.Global().Get("document").Call("getElementById", id),
 	}
 }
 
-func (e *RiwoElement) Id(id string) *RiwoElement {
+func (e *RiwoObject) Id(id string) *RiwoObject {
 	e.jsValue.Set("id", id)
 	return e
 }
 
 // Class
 // Gets and applies values from classes range
-func (e *RiwoElement) Class(classes ...string) *RiwoElement {
+func (e *RiwoObject) Class(classes ...string) *RiwoObject {
 	classList := e.jsValue.Get("classList")
 	for _, cls := range classes {
 		classList.Call("add", cls)
@@ -62,82 +62,89 @@ func (e *RiwoElement) Class(classes ...string) *RiwoElement {
 
 // Style
 // Applies target style ny name/value for current RiwoElement
-func (e *RiwoElement) Style(style string, value interface{}) *RiwoElement {
+func (e *RiwoObject) Style(style string, value interface{}) *RiwoObject {
 	e.jsValue.Get("style").Set(style, value)
 	return e
 }
 
 // Text
 // Sets text content for current element
-func (e *RiwoElement) Text(content string) *RiwoElement {
+func (e *RiwoObject) Text(content string) *RiwoObject {
 	e.jsValue.Set("textContent", content)
 	return e
 }
 
 // Inner
 // Sets Inner HTML value for current RiwoElement
-func (e *RiwoElement) Inner(content string) *RiwoElement {
+func (e *RiwoObject) Inner(content string) *RiwoObject {
 	e.jsValue.Set("innerHTML", content)
 	return e
 }
 
-// Callback
+// Listen
 // Applies event to current RiwoElement
-func (e *RiwoElement) Callback(event string, handler func(this js.Value, args []js.Value) any) *RiwoElement {
+func (e *RiwoObject) Listen(event string, handler func(this js.Value, args []js.Value) any) *RiwoObject {
 	e.jsValue.Call("addEventListener", event, js.FuncOf(handler))
 	return e
 }
 
 // Append
 // Includes (appends) next expected elements range to current RiwoElement
-func (e *RiwoElement) Append(children ...*RiwoElement) *RiwoElement {
+func (e *RiwoObject) Append(children ...*RiwoObject) *RiwoObject {
 	for _, child := range children {
 		e.jsValue.Call("appendChild", child.jsValue)
 	}
 	return e
 }
+func (e *RiwoObject) AppendByDom(children ...js.Value) *RiwoObject {
+	for _, child := range children {
+		e.jsValue.Call("appendChild", child)
+	}
+
+	return e
+}
 
 // Attr
 // Applies attribute to current element
-func (e *RiwoElement) Attr(name, value string) *RiwoElement {
+func (e *RiwoObject) Attr(name, value string) *RiwoObject {
 	e.jsValue.Call("setAttribute", name, value)
 	return e
 }
 
 // Set
 // Updates element's attrubute by name
-func (e *RiwoElement) Set(name string, value interface{}) *RiwoElement {
+func (e *RiwoObject) Set(name string, value interface{}) *RiwoObject {
 	e.jsValue.Set(name, fmt.Sprintf("%s", value))
 	return e
 }
 
 // Mount
 // Appends current container to parent RiwoElement
-func (e *RiwoElement) Mount(parent *RiwoElement) *RiwoElement {
+func (e *RiwoObject) Mount(parent *RiwoObject) *RiwoObject {
 	parent.Append(e)
 	return e
 }
 
 // DOM
 // returns JavaScript data structure for current RiwoElement
-func (e *RiwoElement) DOM() js.Value {
+func (e *RiwoObject) DOM() js.Value {
 	return e.jsValue
 }
 
 // From
 // returns property value string
-func (e *RiwoElement) From(property string) js.Value {
+func (e *RiwoObject) From(property string) js.Value {
 	return e.jsValue.Get(property)
 }
 
 // Call
 // calls target key for current element
-func (e *RiwoElement) Call(property string) js.Value {
+func (e *RiwoObject) Call(property string) js.Value {
 	return e.DOM().Call(property)
 }
 
 // Delete
 // Erases all data
-func (e *RiwoElement) Delete() {
+func (e *RiwoObject) Delete() {
 	e.jsValue = js.Null()
 }

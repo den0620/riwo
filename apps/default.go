@@ -76,9 +76,9 @@ func Construct(window *wm.RiwoWindow) {
 
 		appButton.
 			Inner(appName).
-			Callback("mousedown", init).
-			Callback("mouseover", over).
-			Callback("mouseout", out)
+			Listen("mousedown", init).
+			Listen("mouseover", over).
+			Listen("mouseout", out)
 
 		buttonContainer.
 			Append(appButton).
