@@ -56,7 +56,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 	utcLabel := wm.Create()
 	utcLabel.
 		Text("UTC Offset").
-		Style("cursor", "url(assets/cursor.svg), auto").
+		Style("cursor", wm.CursorDefaultUrl).
 		Style("marginBottom", "5px")
 
 	utcInput := wm.Create()
@@ -69,7 +69,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 	utcHourDecrase := wm.Create()
 
 	utcHourIncrase.
-		Style("cursor", "url(assets/cursor-inverted.svg), auto").
+		Style("cursor", wm.CursorInvertUrl).
 		Style("padding", "10px, 20px").
 		Style("color", "#000000").
 		Style("backgroundColor", bg).
@@ -77,7 +77,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 		Style("borderRadius", 0).
 		Text("+")
 	utcHourDecrase.
-		Style("cursor", "url(assets/cursor-inverted.svg), auto").
+		Style("cursor", wm.CursorInvertUrl).
 		Style("padding", "10px, 20px").
 		Style("color", "#000000").
 		Style("backgroundColor", bg).
@@ -186,7 +186,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 	var updateClock js.Func
 	updateClock = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		now := js.Global().Get("Date").New()
-		utcOffset, _ := strconv.Atoi(utcInput.DOM().Get("textContent").String())
+		utcOffset, _ := strconv.Atoi(utcInput.From("textContent").String())
 
 		hours := (now.Call("getUTCHours").Int() + utcOffset + 24) % 24
 		minutes := now.Call("getUTCMinutes").Int()
@@ -233,7 +233,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 
 func applyTheme(e *wm.RiwoObject, theme map[string]string) {
 	e.
-		Style("cursor", "url(assets/cursor-inverted.svg), auto").
+		Style("cursor", wm.CursorInvertUrl).
 		Style("padding", "10px, 20px").
 		Style("color", "#000000").
 		Style("backgroundColor", theme["vivid"]).

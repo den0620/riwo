@@ -55,7 +55,7 @@ func APP_dplayer(window *wm.RiwoWindow) {
 		btn.Get("style").Set("color", "black")
 		btn.Get("style").Set("border", "solid "+colorMG)
 		btn.Get("style").Set("borderRadius", "0")
-		btn.Get("style").Set("cursor", "url(assets/cursor-inverted.svg), auto")
+		btn.Get("style").Set("cursor", wm.CursorInvertUrl)
 		btn.Get("style").Set("font-family", "monospace")
 		btn.Get("style").Set("font-weight", "bold")
 		// Hover effects
@@ -257,7 +257,7 @@ func PlayerConstruct(window *wm.RiwoWindow) {
 			Style("color", "black").
 			Style("border", "solid "+mg).
 			Style("borderRadius", "0").
-			Style("cursor", "url(assets/cursor-inverted.svg), auto").
+			Style("cursor", wm.CursorInvertUrl).
 			Style("font-family", "monospace").
 			Style("font-weight", "bold")
 		b.Listen("mouseover", func(this js.Value, args []js.Value) interface{} {

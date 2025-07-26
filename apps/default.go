@@ -45,7 +45,7 @@ func Construct(window *wm.RiwoWindow) {
 			Create().
 			Style("color", fg).
 			Style("background", mg).
-			Style("cursor", "url(assets/cursor-inverted.svg), auto").
+			Style("cursor", wm.CursorInvertUrl).
 			Style("padding", "15px").
 			Style("borderRadius", "0").Style("border", "solid "+mg).
 			Style("transition", "all 0.2s ease").
