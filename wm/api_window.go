@@ -64,7 +64,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 	CurrentWindow = window
 	ActiveWindow = *windowContent
 
-	AllWindows[strconv.Itoa(window.ID)] = window // <-- why string?????
+	AllWindows[strconv.Itoa(window.ID)] = window // <-- why string????? // i dont remember but probably because of js
 
 	// Bring to front when clicked
 	windowContent.Listen("mousedown", func(this js.Value, args []js.Value) interface{} {

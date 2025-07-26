@@ -44,6 +44,7 @@ func CreateMenuObject(text string) MenuObject {
 		Text(text).
 		Style("cursor", CursorInvertUrl).
 		Style("padding", "10px").
+		Style("background-color", ThemeMap["green"]["faded"]).
 		Listen("mouseover", func(this js.Value, args []js.Value) interface{} {
 			item.Style("background-color", ThemeMap["green"]["vivid"])
 			return nil

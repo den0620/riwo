@@ -29,7 +29,7 @@ func Construct(window *wm.RiwoWindow) {
 		Inner("Applications").
 		Style("gridColumn", "1 / -1").
 		Style("fontSize", "24px").
-		Style("color", fg).
+		Style("color", mg).
 		Style("textAlign", "center").
 		Style("margin", "20px").
 		Mount(container)
@@ -44,11 +44,10 @@ func Construct(window *wm.RiwoWindow) {
 		appButton := wm.
 			Create().
 			Style("color", "#000000").
-			Style("background", mg).
+			Style("background", bg).
 			Style("cursor", wm.CursorInvertUrl).
 			Style("padding", "15px").
 			Style("borderRadius", "0").Style("border", "solid "+mg).
-			Style("transition", "all 0.2s ease").
 			Style("userSelect", "none")
 
 		// prepare callbacks
@@ -62,15 +61,13 @@ func Construct(window *wm.RiwoWindow) {
 		
 		out := func(this js.Value, args []js.Value) interface{} {
 			appButton.
-				Style("background", bg).
-				Style("color", "#000000")
+				Style("background", bg)
 
 			return nil
 		}
 		over := func(this js.Value, args []js.Value) interface{} {
 			appButton.
-				Style("background", fg).
-				Style("color", bg)
+				Style("background", fg)
 
 			return nil
 		}

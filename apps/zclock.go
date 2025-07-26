@@ -12,7 +12,7 @@ func init() {
 }
 
 func clockConstruct(window *wm.RiwoWindow) {
-	fg := wm.ThemeMap["aqua"]["normal"]
+	//fg := wm.ThemeMap["aqua"]["normal"] // not used so compiler will shit its pants
 	mg := wm.ThemeMap["aqua"]["vivid"]
 	bg := wm.ThemeMap["aqua"]["faded"]
 
@@ -28,7 +28,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 	clock := wm.Create()
 	clock.
 		Style("fontSize", "4em").
-		Style("color", fg)
+		Style("color", mg)
 
 	// simple container styling :D
 	settings := wm.Create()
@@ -61,7 +61,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 
 	utcInput := wm.Create()
 	utcInput.
-		Text("7").
+	    Text("7").  // TODO: get browser's local time
 		Style("minWidth", "30px").
 		Style("textAlign", "center")
 
@@ -236,7 +236,7 @@ func applyTheme(e *wm.RiwoObject, theme map[string]string) {
 		Style("cursor", wm.CursorInvertUrl).
 		Style("padding", "10px, 20px").
 		Style("color", "#000000").
-		Style("backgroundColor", theme["vivid"]).
+		Style("backgroundColor", theme["faded"]).
 		Style("border", "solid "+theme["vivid"]).
 		Style("borderRadius", 0)
 }
