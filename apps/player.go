@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	AppRegistry["Player"] = PlayerConstruct
+	AppRegistry["DPlayer"] = PlayerConstruct
 }
 
 func APP_dplayer(window *wm.RiwoWindow) {
