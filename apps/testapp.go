@@ -8,7 +8,7 @@ func init() {
 	AppRegistry["testapp"] = AppTest
 }
 
-func AppTest(window *wm.Window) {
+func AppTest(window *wm.RiwoWindow) {
 	// init element
 	container := wm.Create()
 
@@ -26,8 +26,8 @@ func AppTest(window *wm.Window) {
 		Style("fontSize", "24px").
 		Style("textAlign", "center").
 		Style("marginBotton", "20px").
+		Style("color", "#55AAAA").
 		Mount(container) // <-- add element to parent
 
-	window.DOM.Set("innerHTML", "")
-	window.DOM.Call("appendChild", container.DOM()) // <-- ideas??
+	window.Content.Inner("").Append(container)
 }

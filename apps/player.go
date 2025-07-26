@@ -10,7 +10,7 @@ func init() {
 	AppRegistry["Player"] = PlayerConstruct
 }
 
-func APP_dplayer(window *wm.Window) {
+func APP_dplayer(window *wm.RiwoWindow) {
 	document := js.Global().Get("document")
 	currentTheme := "blue"
 	colorFG := wm.ThemeMap[currentTheme]["vivid"]
@@ -214,11 +214,10 @@ func APP_dplayer(window *wm.Window) {
 	container.Call("appendChild", audio)
 
 	// Clear window and add container
-	window.DOM.Set("innerHTML", "")
-	window.DOM.Call("appendChild", container)
+
 }
 
-func PlayerConstruct(window *wm.Window) {
+func PlayerConstruct(window *wm.RiwoWindow) {
 	themeKey := "blue"
 	fg := wm.ThemeMap[themeKey]["vivid"]
 	bg := wm.ThemeMap[themeKey]["faded"]
@@ -395,6 +394,7 @@ func PlayerConstruct(window *wm.Window) {
 
 	container.Append(timeDisplay, controls, fileStatus, controls2, fileInput, audio)
 
-	window.DOM.Set("innerHTML", "")
-	window.DOM.Call("appendChild", container.DOM())
+	window.Content.
+		Inner("").
+		Append(container)
 }

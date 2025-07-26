@@ -10,7 +10,7 @@ func init() {
 	AppRegistry["Default"] = Construct
 }
 
-func Construct(window *wm.Window) {
+func Construct(window *wm.RiwoWindow) {
 	bg := wm.ThemeMap["green"]["faded"]
 	mg := wm.ThemeMap["green"]["vivid"]
 	fg := wm.ThemeMap["green"]["normal"]
@@ -86,6 +86,7 @@ func Construct(window *wm.Window) {
 
 	}
 
-	window.DOM.Set("innerHTML", "")
-	window.DOM.Call("appendChild", container.DOM())
+	window.Content.
+		Inner("").
+		Append(container)
 }

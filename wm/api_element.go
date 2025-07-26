@@ -104,3 +104,15 @@ func (e *RiwoElement) Mount(parent *RiwoElement) *RiwoElement {
 func (e *RiwoElement) DOM() js.Value {
 	return e.jsValue
 }
+
+// From
+// returns property value string
+func (e *RiwoElement) From(property string) js.Value {
+	return e.jsValue.Get(property)
+}
+
+// Call
+// calls target key for current element
+func (e *RiwoElement) Call(property string) js.Value {
+	return e.DOM().Call(property)
+}

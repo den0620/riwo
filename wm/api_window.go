@@ -16,32 +16,38 @@ type ContextEntry struct {
 	Callback func()
 }
 
-// Type `Window` manages single abstract window’s properties.
-type Window struct {
-	ID             int            // For the most part unites DOM object and Go object
-	DOM            js.Value       // Connected DOM element.
-	ContextEntries []ContextEntry // Tho "Move", "Resize", "Delete" and "Hide" are basic ones
+// Type `RiwoWindow` manages single abstract window’s properties.
+type RiwoWindow struct {
+	ID          int            // For the most part unites DOM object and Go object
+	Content     *RiwoElement   // Connected DOM element.
+	MenuEntries []ContextEntry // Tho "Move", "Resize", "Delete" and "Hide" are basic ones
 }
 
-// WindowCreate
+// CreateWindow
 // Creates a new Window, sets up its DOM element, and returns a pointer.
-func WindowCreate(x, y, width, height, content string) *Window {
+func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 	WindowCount++
 	id := WindowCount
 
 	document := js.Global().Get("document")
 	body := document.Get("body")
 
-	// Create the DOM element for the window.
-	winElem := document.Call("createElement", "div")
-	style := "overflow: hidden; position: absolute; z-index: " + strconv.Itoa(HighestZIndex) + "; left: " + x +
-		"; top: " + y + "; width: " + width + "; height: " + height +
-		"; background-color: #f0f0f0; border: solid #55AAAA; padding: 0;"
-	winElem.Set("style", style)
-	winElem.Set("innerHTML", content)
-	winElem.Set("id", strconv.Itoa(id)) // Assing shared ID
+	windowContent := Create().
+		Style("overflow", "hidden").
+		Style("position", "absolute").
+		Style("width", w).
+		Style("height", h).
+		Style("top", y).
+		Style("left", x).
+		Style("z-index", strconv.Itoa(HighestZIndex)).
+		Style("background-color", "#f0f0f0").
+		Style("border", "solid #55AAAA").
+		Style("padding", "0").
+		Inner(content)
 
-	body.Call("appendChild", winElem)
+	windowContent.DOM().Set("id", strconv.Itoa(id)) // Assing shared ID
+
+	body.Call("appendChild", windowContent.jsValue) // <-- DOM expected
 
 	// Logging
 	if Verbose {
@@ -49,39 +55,44 @@ func WindowCreate(x, y, width, height, content string) *Window {
 			strconv.Itoa(id) + "\"")
 	}
 
-	window := &Window{
-		ID:  id,
-		DOM: winElem,
+	window := &RiwoWindow{
+		ID:      id,
+		Content: windowContent,
 		// No custom ContextEntries
 	}
+
 	CurrentWindow = window
-	ActiveWindow = winElem
-	AllWindows[strconv.Itoa(window.ID)] = window // <--
+	ActiveWindow = windowContent.DOM()
+	AllWindows[strconv.Itoa(window.ID)] = window // <-- why string?????
 
 	// Bring to front when clicked
-	winElem.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	windowContent.Callback("mousedown", func(this js.Value, args []js.Value) interface{} {
 		if !IsResizingInit {
 			CurrentWindow = window
-			ActiveWindow = winElem
+			ActiveWindow = windowContent.jsValue
 		}
+
 		// Right-click (RMB) on the window to select it for resizing, second right-click activates resizing
 		if IsResizingMode && !IsResizingInit && args[0].Get("button").Int() == 2 {
 			// First RMB hold - Select the window for resizing
 			args[0].Call("preventDefault")
 			args[0].Call("stopPropagation")
+
 			JustSelected = true
 			if Verbose {
 				Print("First right-click: Window selected for resizing.")
 			}
+
+			windowContent.Style("z-index", strconv.Itoa(HighestZIndex))
 			HighestZIndex++
-			winElem.Get("style").Set("z-index", strconv.Itoa(HighestZIndex))
 			IsResizingInit = true
+
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-selection.svg) 12 12, auto")
 		}
 		// Mouse down event for selecting and dragging the window (click brings it to front)
 		if !IsResizingInit {
 			HighestZIndex++
-			winElem.Get("style").Set("z-index", strconv.Itoa(HighestZIndex))
+			windowContent.Style("z-index", strconv.Itoa(HighestZIndex))
 			if Verbose {
 				Print("Window brought to front.")
 			}
@@ -90,18 +101,18 @@ func WindowCreate(x, y, width, height, content string) *Window {
 				args[0].Call("preventDefault")
 				args[0].Call("stopPropagation")
 				//JustSelected = true
-				StartX = args[0].Get("clientX").Float() - winElem.Get("offsetLeft").Float()
-				StartY = args[0].Get("clientY").Float() - winElem.Get("offsetTop").Float()
+				StartX = args[0].Get("clientX").Float() - windowContent.From("offsetLeft").Float()
+				StartY = args[0].Get("clientY").Float() - windowContent.From("offsetTop").Float()
 				IsDragging = true
 				// Create ghost window
 				GhostWindow = document.Call("createElement", "div")
-				rect := winElem.Call("getBoundingClientRect")
+				rect := windowContent.Call("getBoundingClientRect")
 				width := rect.Get("width").Float()
 				height := rect.Get("height").Float()
 				// Ensure ghost window is above everything during drag
 				GhostWindow.Set("style", "position: absolute; z-index: "+strconv.Itoa(HighestZIndex+1)+"; width: "+Ftoa(width)+"px; height: "+Ftoa(height)+"px; border: solid 2px #FF0000; cursor: url(assets/cursor-drag.svg) 12 12, auto;")
-				GhostWindow.Get("style").Set("left", Ftoa(winElem.Get("offsetLeft").Float())+"px")
-				GhostWindow.Get("style").Set("top", Ftoa(winElem.Get("offsetTop").Float())+"px")
+				GhostWindow.Get("style").Set("left", Ftoa(windowContent.From("offsetLeft").Float())+"px")
+				GhostWindow.Get("style").Set("top", Ftoa(windowContent.From("offsetTop").Float())+"px")
 				body.Call("appendChild", GhostWindow)
 				JustSelected = true
 				if Verbose {
@@ -116,20 +127,25 @@ func WindowCreate(x, y, width, height, content string) *Window {
 				IsHiding = false
 
 				hiddenWindowOption := CreateMenuOption("wid " + strconv.Itoa(window.ID))
-				if winElem.Get("title").String() != "" {
-					hiddenWindowOption = CreateMenuOption(winElem.Get("title").String())
+
+				if windowContent.From("title").String() != "" {
+					hiddenWindowOption = CreateMenuOption(windowContent.From("title").String())
 				}
 
 				hiddenWindowOption.Set("id", "menuopt"+strconv.Itoa(window.ID))
-				// Unhide option activation
+
+				// ??? option activation
 				hiddenWindowOption.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 					if args[0].Get("button").Int() == 2 {
 						args[0].Call("preventDefault")
 						args[0].Call("stopPropagation")
 						JustSelected = true
+
 						RemoveMenuOption(hiddenWindowOption)
-						winElem.Get("style").Set("display", "block")
+						windowContent.Style("display", "block")
+
 						ContextMenu.Get("style").Set("display", "none")
+
 						// Delete by value
 						for index, value := range ContextMenuHides {
 							if value.Get("id").String() == hiddenWindowOption.Get("id").String() {
@@ -144,7 +160,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 					return nil
 				}))
 				ContextMenuHides = append(ContextMenuHides, hiddenWindowOption)
-				winElem.Get("style").Set("display", "none")
+				windowContent.Style("display", "none")
 				js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
 				JustSelected = false
 				if Verbose {
@@ -158,7 +174,7 @@ func WindowCreate(x, y, width, height, content string) *Window {
 			args[0].Call("preventDefault")
 			args[0].Call("stopPropagation")
 			JustSelected = true
-			WindowRemove(window)
+			RemoveWindow(window)
 			IsDeleteMode = false
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
 			JustSelected = false
@@ -167,24 +183,25 @@ func WindowCreate(x, y, width, height, content string) *Window {
 			}
 		}
 		return nil
-	}))
+	})
 
 	return window
 }
 
 // Position
 // Sets position and dimensions for the window. (Actually useless)
-func (w *Window) Position(newX, newY, newWidth, newHeight string) {
-	w.DOM.Get("style").Set("left", newX)
-	w.DOM.Get("style").Set("top", newY)
-	w.DOM.Get("style").Set("width", newWidth)
-	w.DOM.Get("style").Set("height", newHeight)
+func (w *RiwoWindow) Position(newX, newY, newWidth, newHeight string) {
+	w.Content.
+		Style("left", newX).
+		Style("top", newY).
+		Style("width", newWidth).
+		Style("height", newHeight)
 }
 
-// WindowRemove
+// RemoveWindow
 // Deletes the window from DOM and Go.
-func WindowRemove(w *Window) {
+func RemoveWindow(w *RiwoWindow) {
 	w.ID = -1                              // Remove reference for apps
-	w.DOM.Call("remove")                   // Remove html part
+	w.Content.Call("remove")               // Remove html part
 	delete(AllWindows, strconv.Itoa(w.ID)) // Remove from list
 }

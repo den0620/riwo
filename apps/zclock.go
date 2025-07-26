@@ -11,7 +11,7 @@ func init() {
 	AppRegistry["ZClock"] = clockConstruct
 }
 
-func clockConstruct(window *wm.Window) {
+func clockConstruct(window *wm.RiwoWindow) {
 	fg := wm.ThemeMap["aqua"]["normal"]
 	mg := wm.ThemeMap["aqua"]["vivid"]
 	bg := wm.ThemeMap["aqua"]["faded"]
@@ -202,7 +202,7 @@ func clockConstruct(window *wm.Window) {
 
 	isSettingsShown := false
 
-	window.ContextEntries = []wm.ContextEntry{
+	window.MenuEntries = []wm.ContextEntry{
 		{
 			Name: "Settings",
 			Callback: func() {
@@ -225,8 +225,8 @@ func clockConstruct(window *wm.Window) {
 
 	settings.Append(settingsUtc, themesPanel)
 	container.Append(clock, settings)
-	window.DOM.Set("innerHTML", "")
-	window.DOM.Call("appendChild", container.DOM())
+
+	window.Content.Inner("").Append(container)
 
 	updateClock.Invoke()
 }

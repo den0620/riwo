@@ -182,7 +182,7 @@ func InitializeGlobalMouseEvents() {
 				height := GhostWindow.Get("style").Get("height").String()
 				GhostWindow.Call("remove")
 				GhostWindow = js.Null()
-				neuwindow := WindowCreate(x, y, width, height, "")
+				neuwindow := CreateWindow(x, y, width, height, "")
 				JustSelected = false
 				if Verbose {
 					Print("New window created at selected area.")
