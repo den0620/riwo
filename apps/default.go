@@ -14,7 +14,7 @@ func Construct(window *wm.RiwoWindow) {
 	bg := wm.ThemeMap["green"]["faded"]
 	mg := wm.ThemeMap["green"]["vivid"]
 	fg := wm.ThemeMap["green"]["normal"]
-
+	
 	container := wm.Create()
 	container.
 		Style("display", "grid").
@@ -24,14 +24,14 @@ func Construct(window *wm.RiwoWindow) {
 		Style("padding", "5%").
 		Style("height", "100%")
 
-	title := wm.CreateKnown("h3")
+	title := wm.Create()
 	title.
 		Inner("Applications").
 		Style("gridColumn", "1 / -1").
 		Style("fontSize", "24px").
 		Style("color", fg).
 		Style("textAlign", "center").
-		Style("marginBotton", "20px").
+		Style("margin", "20px").
 		Mount(container)
 
 	// This is an system Application
@@ -43,7 +43,7 @@ func Construct(window *wm.RiwoWindow) {
 
 		appButton := wm.
 			Create().
-			Style("color", fg).
+			Style("color", "#000000").
 			Style("background", mg).
 			Style("cursor", wm.CursorInvertUrl).
 			Style("padding", "15px").
@@ -59,6 +59,14 @@ func Construct(window *wm.RiwoWindow) {
 			appInit(window)
 			return nil
 		}
+		
+		out := func(this js.Value, args []js.Value) interface{} {
+			appButton.
+				Style("background", bg).
+				Style("color", "#000000")
+
+			return nil
+		}
 		over := func(this js.Value, args []js.Value) interface{} {
 			appButton.
 				Style("background", fg).
@@ -66,19 +74,12 @@ func Construct(window *wm.RiwoWindow) {
 
 			return nil
 		}
-		out := func(this js.Value, args []js.Value) interface{} {
-			appButton.
-				Style("background", bg).
-				Style("color", fg)
-
-			return nil
-		}
 
 		appButton.
 			Inner(appName).
 			Listen("mousedown", init).
-			Listen("mouseover", over).
-			Listen("mouseout", out)
+			Listen("mouseout", out).
+			Listen("mouseover", over)
 
 		buttonContainer.
 			Append(appButton).
