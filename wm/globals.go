@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	ContextMenu      js.Value
+	ContextMenu      RiwoObject
 	ContextMenuHides []js.Value
 	IsDragging       bool
 	IsMovingMode     bool
@@ -22,14 +22,14 @@ var (
 	IsNewMode        bool
 	IsHiding         bool
 	StartX, StartY   float64
-	CurrentWindow    *Window            // Active Go Window
-	ActiveWindow     js.Value           // Active JS window
-	AllWindows       map[string]*Window // All Go Windows
-	GhostWindow      js.Value
+	AllWindows       map[string]*RiwoWindow // All Go Windows
+	CurrentWindow    *RiwoWindow            // Active Go Window
+	ActiveWindow     RiwoObject             // Active JS window
+	GhostWindow      RiwoObject
 	WindowCount      int       // Counter for creating multiple windows with unique z-index
 	HighestZIndex    int  = 10 // Track the highest z-index for bringing windows to front
 	Verbose          bool = false
-	GetColor              = map[string]map[string]string{
+	ThemeMap              = map[string]map[string]string{
 		"monochrome": {
 			"faded":  "#ffffff",
 			"normal": "#777777",

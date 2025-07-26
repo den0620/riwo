@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>JS fell off</title>
     <meta charset="utf-8"/>
     <!-- General Meta Tags -->
     <meta charset="UTF-8" />
@@ -13,7 +14,7 @@
     <script src="go/wasm_exec.js"></script>
     <script>
         const go = new Go();
-        WebAssembly.instantiateStreaming(fetch("build/main.wasm"), go.importObject).then((result) => {
+        WebAssembly.instantiateStreaming(fetch("build/frank_iero/main.wasm"), go.importObject).then((result) => {
             go.run(result.instance);
         });
     </script>
