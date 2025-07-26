@@ -1,6 +1,7 @@
 package wm
 
 import (
+	"fmt"
 	"syscall/js"
 )
 
@@ -13,6 +14,7 @@ type RiwoElement struct {
 // Create
 // Base function for <div> container initialization
 // in Riwo environment
+// (initializes public constructor for RiwoElement)
 func Create() *RiwoElement {
 	return CreateKnown("div")
 }
@@ -20,9 +22,19 @@ func Create() *RiwoElement {
 // CreateKnown
 // Initializes new container known tag.
 // In example: CreateKnown("div") abcolutely equals Create()
+// (initializes public constructor for RiwoElement)
 func CreateKnown(tag string) *RiwoElement {
 	return &RiwoElement{
 		jsValue: js.Global().Get("document").Call("createElement", tag),
+	}
+}
+
+// CreateFrom
+// Makes new RiwoElement from by given DOM data
+// (initializes private constructor for RiwoElement)
+func CreateFrom(from *js.Value) *RiwoElement {
+	return &RiwoElement{
+		jsValue: *from,
 	}
 }
 
@@ -92,6 +104,13 @@ func (e *RiwoElement) Attr(name, value string) *RiwoElement {
 	return e
 }
 
+// Set
+// Updates element's attrubute by name
+func (e *RiwoElement) Set(name string, value interface{}) *RiwoElement {
+	e.jsValue.Set(name, fmt.Sprintf("%s", value))
+	return e
+}
+
 // Mount
 // Appends current container to parent RiwoElement
 func (e *RiwoElement) Mount(parent *RiwoElement) *RiwoElement {
@@ -115,4 +134,10 @@ func (e *RiwoElement) From(property string) js.Value {
 // calls target key for current element
 func (e *RiwoElement) Call(property string) js.Value {
 	return e.DOM().Call(property)
+}
+
+// Delete
+// Erases all data
+func (e *RiwoElement) Delete() {
+	e.jsValue = js.Null()
 }

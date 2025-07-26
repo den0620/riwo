@@ -133,7 +133,7 @@ func InitializeContextMenu() {
 				CurrentWindow = nil
 			}
 			// Append custom context menu entries from the active window, if any.
-			if ActiveWindow.Truthy() && CurrentWindow != nil && CurrentWindow.MenuEntries != nil {
+			if ActiveWindow.DOM().Truthy() && CurrentWindow != nil && CurrentWindow.MenuEntries != nil {
 				for _, customOption := range CurrentWindow.MenuEntries {
 					opt := CreateMenuOption(customOption.Name)
 					opt.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {

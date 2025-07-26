@@ -32,6 +32,8 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 	document := js.Global().Get("document")
 	body := document.Get("body")
 
+	bodyContent := CreateFrom(&body)
+
 	windowContent := Create().
 		Style("overflow", "hidden").
 		Style("position", "absolute").
@@ -43,11 +45,9 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 		Style("background-color", "#f0f0f0").
 		Style("border", "solid #55AAAA").
 		Style("padding", "0").
-		Inner(content)
-
-	windowContent.DOM().Set("id", strconv.Itoa(id)) // Assing shared ID
-
-	body.Call("appendChild", windowContent.jsValue) // <-- DOM expected
+		Set("id", id).  // <-- assing shared ID
+		Inner(content). // <-- spookie-dookie inner HTML
+		Mount(bodyContent)
 
 	// Logging
 	if Verbose {
@@ -62,14 +62,15 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 	}
 
 	CurrentWindow = window
-	ActiveWindow = windowContent.DOM()
+	ActiveWindow = *windowContent
+
 	AllWindows[strconv.Itoa(window.ID)] = window // <-- why string?????
 
 	// Bring to front when clicked
 	windowContent.Callback("mousedown", func(this js.Value, args []js.Value) interface{} {
 		if !IsResizingInit {
 			CurrentWindow = window
-			ActiveWindow = windowContent.jsValue
+			ActiveWindow = *windowContent
 		}
 
 		// Right-click (RMB) on the window to select it for resizing, second right-click activates resizing
@@ -87,8 +88,9 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 			HighestZIndex++
 			IsResizingInit = true
 
-			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor-selection.svg) 12 12, auto")
+			bodyContent.Style("cursor", "url(assets/cursor-selection.svg) 12 12, auto")
 		}
+
 		// Mouse down event for selecting and dragging the window (click brings it to front)
 		if !IsResizingInit {
 			HighestZIndex++
@@ -104,21 +106,29 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 				StartX = args[0].Get("clientX").Float() - windowContent.From("offsetLeft").Float()
 				StartY = args[0].Get("clientY").Float() - windowContent.From("offsetTop").Float()
 				IsDragging = true
+
 				// Create ghost window
-				GhostWindow = document.Call("createElement", "div")
 				rect := windowContent.Call("getBoundingClientRect")
 				width := rect.Get("width").Float()
 				height := rect.Get("height").Float()
+
 				// Ensure ghost window is above everything during drag
-				GhostWindow.Set("style", "position: absolute; z-index: "+strconv.Itoa(HighestZIndex+1)+"; width: "+Ftoa(width)+"px; height: "+Ftoa(height)+"px; border: solid 2px #FF0000; cursor: url(assets/cursor-drag.svg) 12 12, auto;")
-				GhostWindow.Get("style").Set("left", Ftoa(windowContent.From("offsetLeft").Float())+"px")
-				GhostWindow.Get("style").Set("top", Ftoa(windowContent.From("offsetTop").Float())+"px")
-				body.Call("appendChild", GhostWindow)
+				GhostWindow = *Create().
+					Style("left", Ftoa(windowContent.From("offsetLeft").Float())+"px").
+					Style("top", Ftoa(windowContent.From("offsetTop").Float())+"px").
+					Style("position", "absolute").Style("z-index", strconv.Itoa(HighestZIndex+1)).
+					Style("width", Ftoa(width)+"px").
+					Style("height", Ftoa(height)+"px").
+					Style("border", "solid 2px #FF0000").
+					Style("cursor", "url(assets/cursor-drag.svg) 12 12, auto").
+					Mount(bodyContent) // |<-- Append it to bodyContent
+
 				JustSelected = true
 				if Verbose {
 					Print("Dragging initiated with ghost window.")
 				}
 			}
+
 			if IsHiding && args[0].Get("button").Int() == 2 {
 				// Hide window
 				args[0].Call("preventDefault")
@@ -161,7 +171,9 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 				}))
 				ContextMenuHides = append(ContextMenuHides, hiddenWindowOption)
 				windowContent.Style("display", "none")
-				js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+
+				bodyContent.Style("cursor", "url(assets/cursor.svg), auto")
+
 				JustSelected = false
 				if Verbose {
 					Print("WID " + strconv.Itoa(window.ID) + " hidden")
@@ -173,10 +185,13 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 		if IsDeleteMode && args[0].Get("button").Int() == 2 {
 			args[0].Call("preventDefault")
 			args[0].Call("stopPropagation")
+
 			JustSelected = true
 			RemoveWindow(window)
 			IsDeleteMode = false
+
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
+
 			JustSelected = false
 			if Verbose {
 				Print("Window deleted.")
