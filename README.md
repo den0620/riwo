@@ -40,10 +40,19 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 
 ## Possible known issues
 
-~Menu opens with single RMB click and NOT hold because I found it simpler~
+Menu opens with single RMB click and NOT hold because I found it simpler
 
 SVG cursors may be junky
 
 If mode was interrupted without mouseup things may brake (I really dont want to fix this)
 
 Apps or their processes may remain alive (this should be fixed by checking if underlying window isn't nil but idk)
+
+
+<a href="https://star-history.com/#den0620/riwo&Date">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=den0620/riwo&type=Date&theme=dark" />
+        <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=den0620/riwo&type=Date" />
+        <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=den0620/riwo&type=Date" />
+    </picture>
+</a>
