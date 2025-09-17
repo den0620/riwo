@@ -15,16 +15,22 @@ type mahjonggBrick struct {
 	Type	int				// Brick type, identical are deleteable
 	Content	*wm.RiwoObject	// Connected DOM element.
 }
-func createMahjonggBrick(brickType int) *mahjonggBrick {
+func createMahjonggBrick(brickType int, mgColor string) *mahjonggBrick {
 	return &mahjonggBrick{
 		Type:    brickType,
-		Content: wm.Create(),
+		Content: wm.Create().
+			Text("🍔").
+			Style("height", "3rem").
+			Style("width", "2rem").
+			Style("justifyContent", "center").
+			Style("alignItems", "center").
+			Style("backgroundColor", mgColor),
 	}
 }
 
 func mahjonggConstruct(window *wm.RiwoWindow) {
 	//fg := wm.ThemeMap["yellow"]["normal"]
-	//mg := wm.ThemeMap["yellow"]["faded"]
+	mg := wm.ThemeMap["yellow"]["faded"]
 	bg := wm.ThemeMap["yellow"]["vivid"]
 
 	container := wm.Create()
@@ -36,7 +42,7 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		Style("alignItems", "center").
 		Style("backgroundColor", bg)
 	
-	examplebrick1 := createMahjonggBrick(1)
+	examplebrick1 := createMahjonggBrick(1, mg)
 	
 	container.Append(examplebrick1.Content)
 
