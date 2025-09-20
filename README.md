@@ -29,7 +29,7 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 - [x] Window-specific context menu entries
 - [x] Bearable apps
 ### Accessibility
-- [x] Touch adaptation (broke for some reason)
+- [x] Touch adaptation
 ### Default apps
 - [x] Starter (`Default`)
 - [x] Clock (`ZClock`)
