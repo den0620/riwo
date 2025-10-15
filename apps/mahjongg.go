@@ -1,10 +1,7 @@
 package apps
 
 import (
-	//"fmt"
 	"riwo/wm"
-	//"strconv"
-	//"syscall/js"
 )
 
 func init() {
@@ -15,11 +12,84 @@ type mahjonggBrick struct {
 	Type	int				// Brick type, identical are deleteable
 	Content	*wm.RiwoObject	// Connected DOM element.
 }
-func createMahjonggBrick(brickType int, mgColor string) *mahjonggBrick {
+var mahjonggBrickTiles = map[string]map[string][]string{
+	// https://en.wikipedia.org/wiki/Mahjong#Suited_tiles
+	"Suited": {
+		"Dots": {
+			"?", // skip index 0
+			"⢀",
+			"⣀",
+			"⣠",
+			"⣤",
+			"⣴",
+			"⣶",
+			"⣾",
+			"⣿",
+			"⑨",
+		},
+		"Bamboo": {
+			"?",
+			"🍩",
+			"🥯",
+			"🥨",
+			"🍕",
+			"🥪",
+			"🌮",
+			"🌭",
+			"🍔",
+			"🍟",
+		},
+		"Characters": {
+			"?",
+			"1",
+			"2",
+			"3",
+			"4",
+			"5",
+			"6",
+			"7",
+			"8",
+			"9",
+		},
+	},
+    "Honours": {
+		"Winds": {
+			"?",
+			"←",
+			"↑",
+			"→",
+			"↓",
+		},
+		"Dragons": {
+			"?",
+			"🔴",
+			"🟢",
+			"🔵",
+		},
+	},
+    "Bonus": {
+		"Flowers": {
+			"?",
+			"🌺",
+			"🌼",
+			"🌸",
+			"🍀",
+		},
+		"Seasons": {
+			"?",
+			"🕐",
+			"🕓",
+			"🕗",
+			"🕚",
+		},
+	},
+}
+
+func createMahjonggBrick(brickCategory string, brickSet string, brickType int, mgColor string) *mahjonggBrick {
 	return &mahjonggBrick{
 		Type:    brickType,
 		Content: wm.Create().
-			Text("🍔").
+			Text( mahjonggBrickTiles[brickCategory][brickSet][brickType] ).
 			Style("height", "3rem").
 			Style("width", "2rem").
 			Style("justifyContent", "center").
@@ -42,7 +112,7 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		Style("alignItems", "center").
 		Style("backgroundColor", bg)
 	
-	examplebrick1 := createMahjonggBrick(1, mg)
+	examplebrick1 := createMahjonggBrick("Suited", "Dots", 9, mg)
 	
 	container.Append(examplebrick1.Content)
 
