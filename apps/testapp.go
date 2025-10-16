@@ -1,5 +1,5 @@
 package apps
-
+/*
 import (
 	"riwo/wm"
 )
@@ -31,3 +31,4 @@ func AppTest(window *wm.RiwoWindow) {
 
 	window.Content.Inner("").Append(container)
 }
+*/

@@ -18,12 +18,13 @@ func Construct(window *wm.RiwoWindow) {
 	container := wm.Create()
 	container.
 		Style("display", "grid").
-		Style("gridTemplateColumns", "repeat(auto-fit, minmax(120px, 1fr))").
+		Style("gridTemplateColumns", "repeat(auto-fit, minmax(6rem, 1fr))").
 		Style("background", bg).
-		Style("gap", "5%").
-		Style("padding", "5%").
+		Style("gap", "0.25rem").
+		Style("padding", "0.25rem").
 		Style("height", "100%")
 
+	/*
 	title := wm.Create()
 	title.
 		Inner("Applications").
@@ -33,6 +34,7 @@ func Construct(window *wm.RiwoWindow) {
 		Style("textAlign", "center").
 		Style("margin", "20px").
 		Mount(container)
+	*/
 
 	// This is an system Application
 	// Get other registered applications
@@ -46,7 +48,9 @@ func Construct(window *wm.RiwoWindow) {
 			Style("color", "#000000").
 			Style("background", bg).
 			Style("cursor", wm.CursorInvertUrl).
-			Style("padding", "15px").
+			Style("padding", "1rem").
+			Style("width", "auto").
+			Style("height", "auto").
 			Style("borderRadius", "0").Style("border", "solid "+mg).
 			Style("userSelect", "none")
 

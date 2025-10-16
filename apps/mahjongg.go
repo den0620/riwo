@@ -112,7 +112,7 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		Style("alignItems", "center").
 		Style("backgroundColor", bg)
 	
-	examplebrick1 := createMahjonggBrick("Suited", "Dots", 9, mg)
+	examplebrick1 := createMahjonggBrick("Honours", "Dragons", 1, mg)
 	
 	container.Append(examplebrick1.Content)
 
