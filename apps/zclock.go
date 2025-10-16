@@ -61,7 +61,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 
 	utcInput := wm.Create()
 	utcInput.
-	    Text("7").  // TODO: get browser's local time
+	    Text(strconv.Itoa(-js.Global().Get("Date").New().Call("getTimezoneOffset").Int()/60)).
 		Style("minWidth", "30px").
 		Style("textAlign", "center")
 
