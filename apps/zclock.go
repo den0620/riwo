@@ -101,7 +101,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 		}
 		themeButton := wm.Create()
 
-		applyTheme(themeButton, theme)
+		applyThemeToButton(themeButton, theme)
 
 		out := func(this js.Value, args []js.Value) interface{} {
 			themeButton.Style("backgroundColor", wm.ThemeMap[key]["faded"])
@@ -119,8 +119,8 @@ func clockConstruct(window *wm.RiwoWindow) {
 			clock.Style("color", wm.ThemeMap[newTheme]["vivid"])
 			settingsTitle.Style("color", wm.ThemeMap[newTheme]["vivid"])
 
-			applyTheme(utcHourDecrase, wm.ThemeMap[newTheme])
-			applyTheme(utcHourIncrase, wm.ThemeMap[newTheme])
+			applyThemeToButton(utcHourDecrase, wm.ThemeMap[newTheme])
+			applyThemeToButton(utcHourIncrase, wm.ThemeMap[newTheme])
 
 			themeKey = newTheme
 			return nil
@@ -231,7 +231,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 	updateClock.Invoke()
 }
 
-func applyTheme(e *wm.RiwoObject, theme map[string]string) {
+func applyThemeToButton(e *wm.RiwoObject, theme map[string]string) {
 	e.
 		Style("cursor", wm.CursorInvertUrl).
 		Style("padding", "10px, 20px").
