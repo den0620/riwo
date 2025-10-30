@@ -85,23 +85,26 @@ var mahjonggBrickTiles = map[string]map[string][]string{
 	},
 }
 
-func createMahjonggBrick(brickCategory string, brickSet string, brickType int, mgColor string) *mahjonggBrick {
+func createMahjonggBrick(brickCategory string, brickSet string, brickType int, normal string, faded string, vivid string) *mahjonggBrick {
 	return &mahjonggBrick{
 		Type:    brickType,
 		Content: wm.Create().
 			Text( mahjonggBrickTiles[brickCategory][brickSet][brickType] ).
 			Style("height", "3rem").
 			Style("width", "2rem").
+			Style("display", "flex").
 			Style("justifyContent", "center").
 			Style("alignItems", "center").
-			Style("backgroundColor", mgColor),
+			Style("border", "solid").
+			Style("border-color", vivid).
+			Style("backgroundColor", normal),
 	}
 }
 
 func mahjonggConstruct(window *wm.RiwoWindow) {
-	//fg := wm.ThemeMap["yellow"]["normal"]
-	mg := wm.ThemeMap["yellow"]["faded"]
-	bg := wm.ThemeMap["yellow"]["vivid"]
+	colourNormal := wm.ThemeMap["yellow"]["normal"]
+	colourFaded := wm.ThemeMap["yellow"]["faded"]
+	colourVivid := wm.ThemeMap["yellow"]["vivid"]
 
 	container := wm.Create()
 	container.
@@ -110,9 +113,9 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		Style("flexDirection", "column").
 		Style("justifyContent", "center").
 		Style("alignItems", "center").
-		Style("backgroundColor", bg)
+		Style("backgroundColor", colourFaded)
 	
-	examplebrick1 := createMahjonggBrick("Honours", "Dragons", 1, mg)
+	examplebrick1 := createMahjonggBrick("Honours", "Dragons", 1, colourNormal, colourFaded, colourVivid)
 	
 	container.Append(examplebrick1.Content)
 
