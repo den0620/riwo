@@ -34,9 +34,9 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 - [x] Starter (`Default`)
 - [x] Clock (`ZClock`)
 - [x] Audio player (`DPlayer`)
+- [x] Mahjongg (`Mahjongg`)
 - [ ] Gallery ()
-- [ ] Themer ()
-- [ ] Mahjongg ()
+- [ ] Monaco Editor ()
 
 ## Possible known issues
 
@@ -48,6 +48,9 @@ If mode was interrupted without mouseup things may brake (I really dont want to 
 
 Apps or their processes may remain alive (this should be fixed by checking if underlying window isn't nil but idk)
 
+Mahjongg sometimes generates unbeatable setup
+
+Mahjongg has no plan9-ish cursor for cursor "not allowed"
 
 <a href="https://star-history.com/#den0620/riwo&Date">
     <picture>

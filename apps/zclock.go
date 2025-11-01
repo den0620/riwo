@@ -231,12 +231,3 @@ func clockConstruct(window *wm.RiwoWindow) {
 	updateClock.Invoke()
 }
 
-func applyThemeToButton(e *wm.RiwoObject, theme map[string]string) {
-	e.
-		Style("cursor", wm.CursorInvertUrl).
-		Style("padding", "10px, 20px").
-		Style("color", "#000000").
-		Style("backgroundColor", theme["faded"]).
-		Style("border", "solid "+theme["vivid"]).
-		Style("borderRadius", 0)
-}
