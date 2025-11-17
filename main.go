@@ -5,10 +5,6 @@ import (
 	"riwo/wm"
 	"strconv"
 	"syscall/js"
-	//"net"
-    //"net/http"
-    //"log"
-    //"github.com/gorilla/websocket"
 )
 
 func Logging(this js.Value, args []js.Value) interface{} {
@@ -46,9 +42,6 @@ func LaunchDefault(this js.Value, args []js.Value) interface{} {
 }
 
 func main() {
-    //http.HandleFunc("/", handle)
-    //log.Fatal(http.ListenAndServe(":9999", nil))
-
 	c := make(chan struct{})
 
 	// Print an introductory message to the browser console.
