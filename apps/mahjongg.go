@@ -212,18 +212,15 @@ func mahjonggIsBrickFree(board [][][]*mahjonggBrick, layer, row, col int) bool {
 		}
 	}
 
-	// Check left side (need both left positions to be free)
+	// Check sides
 	leftFree := (col == 0) ||
 		(board[layer][row][col-1] == nil || board[layer][row][col-1].removed)
-
-	// Check right side (need both right positions to be free)
 	rightFree := (col == len(board[layer][row])-1) ||
 		(board[layer][row][col+1] == nil || board[layer][row][col+1].removed)
 
 	// At least one side must be completely free
 	return leftFree || rightFree
 }
-
 // Get all available (non-removed, typ=-1) brick positions
 func mahjonggGetAvailablePositions(board *[][][]*mahjonggBrick) []*mahjonggBrick {
 	var available []*mahjonggBrick
@@ -241,7 +238,6 @@ func mahjonggGetAvailablePositions(board *[][][]*mahjonggBrick) []*mahjonggBrick
 
 	return available
 }
-
 // Check if position would be valid for placement (ensuring solvability)
 func mahjonggIsValidPlacement(board *[][][]*mahjonggBrick, brick *mahjonggBrick) bool {
 	layer, row, col := brick.layer, brick.row, brick.col
@@ -267,7 +263,6 @@ func mahjonggIsValidPlacement(board *[][][]*mahjonggBrick, brick *mahjonggBrick)
 
 	return leftFree || rightFree
 }
-
 // Update which bricks are currently blocked
 func mahjonggUpdateBlockedStatus(board *[][][]*mahjonggBrick) {
 	for layer := 0; layer < len(*board); layer++ {
@@ -281,7 +276,6 @@ func mahjonggUpdateBlockedStatus(board *[][][]*mahjonggBrick) {
 		}
 	}
 }
-
 // Guess for now board size will be static 14x8
 // no pun intended, this is 9front's size of `games/mahjongg`
 func mahjonggBoardCreate(layout string) [][][]*mahjonggBrick {
@@ -330,69 +324,87 @@ func mahjonggBoardCreate(layout string) [][][]*mahjonggBrick {
 	}
 	return board
 }
+// Get tile category ranges
+func mahjonggGetTileRanges() (flowerStart, flowerEnd, seasonStart, seasonEnd int) {
+	offset := 0
+	categoryOrder := []string{"Dots", "Bamboo", "Chars", "Winds", "Dragons", "Flowers", "Seasons"}
+	
+	for _, category := range categoryOrder {
+		tiles := mahjonggBrickTiles[category]
+		if category == "Flowers" {
+			flowerStart = offset
+			flowerEnd = offset + len(tiles)
+		} else if category == "Seasons" {
+			seasonStart = offset
+			seasonEnd = offset + len(tiles)
+		}
+		offset += len(tiles)
+	}
+	return
+}
+// Check if two tiles match (flowers match any flower, seasons match any season)
+func mahjonggTilesMatch(typ1, typ2 int) bool {
+	flowerStart, flowerEnd, seasonStart, seasonEnd := mahjonggGetTileRanges()
+	
+	if typ1 >= flowerStart && typ1 < flowerEnd && typ2 >= flowerStart && typ2 < flowerEnd {
+		return true
+	}
+	if typ1 >= seasonStart && typ1 < seasonEnd && typ2 >= seasonStart && typ2 < seasonEnd {
+		return true
+	}
+	
+	return typ1 == typ2
+}
+
 func mahjonggBoardFill(board *[][][]*mahjonggBrick) {
-	// Get all brick positions that need to be filled
 	available := mahjonggGetAvailablePositions(board)
 	totalBricks := len(available)
 
 	if totalBricks == 0 || totalBricks%2 != 0 {
-		// Invalid board - must have even number of bricks
 		return
 	}
 
-	// Shuffle available positions for randomness
 	rand.Shuffle(len(available), func(i, j int) {
 		available[i], available[j] = available[j], available[i]
 	})
 
-	totalTileTypes := mahjonggGetTotalTileTypes() // 42 unique tiles
-	//	pairsNeeded := totalBricks / 2
-
-	// Create tile ID pool - each tile appears at least enough times
+	flowerStart, _, seasonStart, _ := mahjonggGetTileRanges()
+	
 	tilePool := make([]int, 0, totalBricks)
 
-	// Flowers and Seasons are unique (only 1 of each can match with itself)
-	// Other tiles appear in sets of 4 in real Mahjong
-	for tileID := 0; tileID < totalTileTypes; tileID++ {
-		// For simplicity, just ensure we have enough pairs
-		// You can make this more sophisticated later
-		tilesOfThisType := 4 // Standard mahjong has 4 of each
+	// Determine how many flowers and seasons to include
+	numFlowerPairs := 4  // All 4 flowers
+	numSeasonPairs := 4  // All 4 seasons
+	numSpecialBricks := (numFlowerPairs + numSeasonPairs) * 2  // 16 total
+	numRegularBricks := totalBricks - numSpecialBricks
 
-		// Add this tile type enough times
-		for i := 0; i < tilesOfThisType && len(tilePool) < totalBricks; i++ {
-			tilePool = append(tilePool, tileID)
-		}
+	// Add regular tiles (Dots, Bamboo, Chars, Winds, Dragons) in sets of 4
+	regularTileTypes := flowerStart // Everything before flowers
+	for i := 0; i < numRegularBricks; i++ {
+		tileID := (i / 4) % regularTileTypes
+		tilePool = append(tilePool, tileID)
 	}
 
-	// Shuffle the tile pool
+	// Add all 4 flower types as pairs
+	for i := 0; i < numFlowerPairs; i++ {
+		flowerID := flowerStart + i
+		tilePool = append(tilePool, flowerID, flowerID)
+	}
+	// Add all 4 season types as pairs
+	for i := 0; i < numSeasonPairs; i++ {
+		seasonID := seasonStart + i
+		tilePool = append(tilePool, seasonID, seasonID)
+	}
+
+	// Shuffle and assign
 	rand.Shuffle(len(tilePool), func(i, j int) {
 		tilePool[i], tilePool[j] = tilePool[j], tilePool[i]
 	})
 
-	// Assign tiles in pairs to ensure solvability
-	poolIndex := 0
-	for i := 0; i < len(available)-1; i += 2 {
-		// Pick a tile type
-		tileID := tilePool[poolIndex]
-		poolIndex++
-
-		// Assign to two bricks
-		brick1 := available[i]
-		brick2 := available[i+1]
-
-		// Verify both positions are valid
-		if mahjonggIsValidPlacement(board, brick1) && mahjonggIsValidPlacement(board, brick2) {
-			brick1.typ = tileID
-			brick2.typ = tileID
-		} else {
-			// Try to find better positions if these aren't valid
-			// For now, just assign anyway - you can improve this with backtracking
-			brick1.typ = tileID
-			brick2.typ = tileID
-		}
+	for i := 0; i < len(available) && i < len(tilePool); i++ {
+		available[i].typ = tilePool[i]
 	}
 
-	// Update blocked status for all bricks
 	mahjonggUpdateBlockedStatus(board)
 }
 
@@ -429,7 +441,6 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 	container.Append(timerElem, boardElem)
 	window.Content.Inner("").Append(container)
 
-	// Timer update
 	var updateTimer func()
 	updateTimer = func() {
 		if timerStop {
@@ -593,7 +604,7 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 			b.elem.Style("backgroundColor", theme["normal"])
 		} else {
 			// Check match
-			if selected.typ == b.typ {
+			if mahjonggTilesMatch(selected.typ, b.typ) {
 				selected.removed = true
 				selected.elem.Style("display", "none")
 				b.removed = true
