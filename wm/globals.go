@@ -69,7 +69,9 @@ var (
 )
 
 func Print(value string) {
-	js.Global().Get("console").Call("log", value)
+	if Verbose {
+		js.Global().Get("console").Call("log", value)
+	}
 }
 func Ftoa(value float64) string {
 	return strconv.FormatFloat(value, 'f', 6, 64)

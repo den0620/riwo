@@ -96,9 +96,7 @@ func InitializeContextMenu() {
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", CursorSelectUrl)
 
 			ContextMenu.Style("display", "none")
-			if Verbose {
-				Print("Move mode activated.")
-			}
+			Print("Move mode activated.")
 		}
 		return nil
 	})
@@ -113,9 +111,7 @@ func InitializeContextMenu() {
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", CursorSelectUrl)
 
 			ContextMenu.Style("display", "none")
-			if Verbose {
-				Print("Resize mode activated.")
-			}
+			Print("Resize mode activated.")
 		}
 		return nil
 	})
@@ -130,9 +126,7 @@ func InitializeContextMenu() {
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", CursorSelectUrl)
 
 			ContextMenu.Style("display", "none")
-			if Verbose {
-				Print("Delete mode activated.")
-			}
+			Print("Delete mode activated.")
 		}
 		return nil
 	})
@@ -144,9 +138,7 @@ func InitializeContextMenu() {
 			IsHiding = true
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", CursorSelectUrl)
 			ContextMenu.Style("display", "none")
-			if Verbose {
-				Print("Hide mode activated.")
-			}
+			Print("Hide mode activated.")
 		}
 		return nil
 	})
@@ -166,9 +158,7 @@ func InitializeContextMenu() {
 
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", CursorSelectUrl)
 			ContextMenu.Style("display", "none")
-			if Verbose {
-				Print("New mode activated. Select an area to create a window.")
-			}
+			Print("New mode activated. Select an area to create a window.")
 		}
 		return nil
 	})
@@ -215,9 +205,7 @@ func InitializeContextMenu() {
 						customOption.Callback()
 						ContextMenu.Style("display", "none") // hide menu after click
 						JustSelected = false
-						if Verbose {
-							Print("Custom option " + customOption.Name + " called")
-						}
+						Print("Custom option " + customOption.Name + " called")
 						return nil
 					})
 					ContextMenu.AppendByDom(opt.DOM())

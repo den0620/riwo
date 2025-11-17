@@ -50,10 +50,8 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 		Mount(bodyContent)
 
 	// Logging
-	if Verbose {
-		Print("Generated window's ID (wid) is \"" +
-			strconv.Itoa(id) + "\"")
-	}
+	Print("Generated window's ID (wid) is \"" +
+		strconv.Itoa(id) + "\"")
 
 	window := &RiwoWindow{
 		ID:      id,
@@ -80,9 +78,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 			args[0].Call("stopPropagation")
 
 			JustSelected = true
-			if Verbose {
-				Print("First right-click: Window selected for resizing.")
-			}
+			Print("First right-click: Window selected for resizing.")
 
 			windowContent.Style("z-index", strconv.Itoa(HighestZIndex))
 			HighestZIndex++
@@ -95,9 +91,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 		if !IsResizingInit {
 			HighestZIndex++
 			windowContent.Style("z-index", strconv.Itoa(HighestZIndex))
-			if Verbose {
-				Print("Window brought to front.")
-			}
+			Print("Window brought to front.")
 
 			if IsMovingMode && args[0].Get("button").Int() == 2 {
 				args[0].Call("preventDefault")
@@ -124,9 +118,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 					Mount(bodyContent) // |<-- Append it to bodyContent
 
 				JustSelected = true
-				if Verbose {
-					Print("Dragging initiated with ghost window.")
-				}
+				Print("Dragging initiated with ghost window.")
 			}
 
 			if IsHiding && args[0].Get("button").Int() == 2 {
@@ -163,9 +155,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 							}
 						}
 						JustSelected = false
-						if Verbose {
-							Print("Unhide activated.")
-						}
+						Print("Unhide activated.")
 					}
 					return nil
 				})
@@ -175,9 +165,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 				bodyContent.Style("cursor", "url(assets/cursor.svg), auto")
 
 				JustSelected = false
-				if Verbose {
-					Print("WID " + strconv.Itoa(window.ID) + " hidden")
-				}
+				Print("WID " + strconv.Itoa(window.ID) + " hidden")
 
 			}
 		}
@@ -193,9 +181,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
 
 			JustSelected = false
-			if Verbose {
-				Print("Window deleted.")
-			}
+			Print("Window deleted.")
 		}
 		return nil
 	})

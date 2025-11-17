@@ -1,7 +1,6 @@
 package wm
 
 import (
-	"fmt"
 	"syscall/js"
 )
 
@@ -114,7 +113,7 @@ func (e *RiwoObject) Attr(name, value string) *RiwoObject {
 // Set
 // Updates element's attrubute by name
 func (e *RiwoObject) Set(name string, value interface{}) *RiwoObject {
-	e.jsValue.Set(name, fmt.Sprintf("%s", value))
+	e.jsValue.Set(name, value)
 	return e
 }
 

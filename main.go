@@ -10,9 +10,9 @@ import (
 func Logging(this js.Value, args []js.Value) interface{} {
 	wm.Verbose = !wm.Verbose
 	if wm.Verbose {
-		wm.Print("Logging is now ON")
+		js.Global().Get("console").Call("log", "Logging is now ON")
 	} else {
-		wm.Print("Logging is now OFF")
+		js.Global().Get("console").Call("log", "Logging is now OFF")
 	}
 	return nil
 }
@@ -31,9 +31,7 @@ func LaunchDefault(this js.Value, args []js.Value) interface{} {
 	fetchedWindow, ok := wm.AllWindows[strconv.Itoa(num)]
 	if !ok {
 		// Im really not okay (trust me)
-		if wm.Verbose {
-			wm.Print("Couldn't start APP_default on window " + strconv.Itoa(num))
-		}
+		js.Global().Get("console").Call("log", "Couldn't start APP_default on window " + strconv.Itoa(num))
 		return nil
 	}
 
@@ -45,7 +43,7 @@ func main() {
 	c := make(chan struct{})
 
 	// Print an introductory message to the browser console.
-	wm.Print(`
+	js.Global().Get("console").Call("log", `
 Great, You've found yourself in the console
 Then you are likely to want to know this:
 - Click LMB to cancel any action

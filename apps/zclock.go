@@ -1,7 +1,6 @@
 package apps
 
 import (
-	"fmt"
 	"riwo/wm"
 	"strconv"
 	"syscall/js"
@@ -96,9 +95,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 	themeKey := "aqua"
 
 	for key, theme := range wm.ThemeMap { // <-- not sure
-		if wm.Verbose {
-			wm.Print(fmt.Sprintf("\tTheme[%s] -> %v", key, theme))
-		}
+		wm.Print("\tTheme["+key+"] -> "+themeKey) // was "theme" but gave an error
 		themeButton := wm.Create()
 
 		applyThemeToButton(themeButton, theme)
@@ -214,9 +211,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 					settings.Style("display", "none")
 					clock.Style("display", "block")
 				}
-				if wm.Verbose {
-					wm.Print("zclock settings toggled: " + strconv.FormatBool(isSettingsShown))
-				}
+				wm.Print("zclock settings toggled: " + strconv.FormatBool(isSettingsShown))
 			},
 		},
 	}

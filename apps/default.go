@@ -56,9 +56,7 @@ func Construct(window *wm.RiwoWindow) {
 
 		// prepare callbacks
 		init := func(this js.Value, args []js.Value) interface{} {
-			if wm.Verbose {
-				wm.Print("App " + appName + " selected")
-			}
+			wm.Print("App " + appName + " selected")
 			appInit(window)
 			return nil
 		}
