@@ -1,4 +1,5 @@
 # riwo
+
 Small webassembly rio-like window manager in go
 
 riwo stands for "Riwo is web one"
@@ -12,8 +13,6 @@ hardly inspired by Plan 9's [Rio](https://9p.io/wiki/plan9/using_rio/index.html)
 It uses [syscall/js](https://pkg.go.dev/syscall/js) to manipulate DOM and mimic rio
 
 Windows are \<div\>s with html inside
-
-Better documentation soon™️
 
 Credits to Go team for their [Go fonts](https://go.dev/blog/go-fonts)
 
@@ -35,22 +34,24 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 - [x] Clock (`ZClock`)
 - [x] Audio player (`DPlayer`)
 - [x] Mahjongg (`Mahjongg`)
-- [ ] Gallery ()
-- [ ] Monaco Editor ()
+- [ ] Manual (`RTFM`)
+- [ ] Gallery (`?`)
+- [ ] Monaco Editor (`?`)
+- [ ] Drawterm (`?`)
 
 ## Possible known issues
 
 Menu opens with single RMB click and NOT hold because I found it simpler
 
+Buttons can be clicked with both RMB and LMB and NOT mousewheel button because I found it simpler
+
 SVG cursors may be junky
 
 If mode was interrupted without mouseup things may brake (I really dont want to fix this)
 
-Apps or their processes may remain alive (this should be fixed by checking if underlying window isn't nil but idk)
-
-Mahjongg sometimes generates unbeatable setup
-
 Mahjongg has no plan9-ish cursor for cursor "not allowed"
+
+Mahjongg may not fit in phone's screen
 
 <a href="https://star-history.com/#den0620/riwo&Date">
     <picture>
