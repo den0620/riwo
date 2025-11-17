@@ -537,7 +537,7 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		hasMove := false
 		for i := 0; i < len(free); i++ {
 			for j := i + 1; j < len(free); j++ {
-				if free[i].typ == free[j].typ {
+				if mahjonggTilesMatch(free[i].typ, free[j].typ) {
 					hasMove = true
 					break
 				}
