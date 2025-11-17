@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"math/rand"
 	"riwo/wm"
 	"strconv"
 	"syscall/js"
@@ -9,9 +10,13 @@ import (
 
 func init() {
 	AppRegistry["Mahjongg"] = mahjonggConstruct
+	//rand.Seed(time.Now().UnixNano()) // Deprecated as of Go 1.20
 }
 
-type brick struct {
+var mahjonggLayoutNames = []string{"Classic", "Fortress", "Arena"}
+var mahjonggThemeNames = []string{"yellow", "blue", "green", "red", "purple", "aqua", "orange", "pink"}
+
+type mahjonggBrick struct {
 	typ     int
 	elem    *wm.RiwoObject
 	layer   int
@@ -21,73 +26,383 @@ type brick struct {
 	removed bool
 }
 
-var tiles = map[string][]string{
-	"Dots":    {"?", "⢀", "⣀", "⣠", "⣤", "⣴", "⣶", "⣾", "⣿", "⑨"},
-	"Bamboo":  {"?", "🍩", "🥯", "🥨", "🍕", "🥪", "🌮", "🌭", "🍔", "🍟"},
-	"Chars":   {"?", "1", "2", "3", "4", "5", "6", "7", "8", "9"},
-	"Winds":   {"?", "←", "↑", "→", "↓"},
-	"Dragons": {"?", "🔴", "🟢", "🔵"},
-	"Flowers": {"?", "🌺", "🌼", "🌸", "🍀"},
+var mahjonggBrickTiles = map[string][]string{
+	"Dots":    {"⢀", "⣀", "⣠", "⣤", "⣴", "⣶", "⣾", "⣿", "⑨"},
+	"Bamboo":  {"🍩", "🥯", "🥨", "🍕", "🥪", "🌮", "🌭", "🍔", "🍟"},
+	"Chars":   {"𝟙", "𝟚", "𝟛", "𝟜", "𝟝", "𝟞", "𝟟", "𝟠", "𝟡"},
+	"Winds":   {"←", "↑", "→", "↓"},
+	"Dragons": {"🔴", "🟢", "🔵"},
+	"Flowers": {"🌺", "🌼", "🌸", "🍀"},
+	"Seasons": {"🕑", "🕓", "🕗", "🕙"},
 }
 
-var layouts = map[string][][]int{
+func mahjonggGetTileEmoji(tileID int) string {
+	categoryOrder := []string{"Dots", "Bamboo", "Chars", "Winds", "Dragons", "Flowers", "Seasons"}
+
+	offset := 0
+	for _, category := range categoryOrder {
+		tiles := mahjonggBrickTiles[category]
+		if tileID < offset+len(tiles) {
+			return tiles[tileID-offset]
+		}
+		offset += len(tiles)
+	}
+	return "?" // how?
+}
+func mahjonggGetTotalTileTypes() int {
+	total := 0
+	for _, tiles := range mahjonggBrickTiles {
+		total += len(tiles)
+	}
+	return total // Should be 42 total tiles
+}
+
+var mahjonggLayouts = map[string][][][]int{
 	"Classic": {
-		{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
-		{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
-		{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-		{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
-		{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
+		{
+			{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+			{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+			{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+			{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+			{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
+			{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+			{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+			{87}, // Last index stores amount of bricks
+		},
+		{
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+			{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+			{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+			{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+			{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+			{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{36},
+		},
+		{
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{16},
+		},
+		{
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{4},
+		},
+		{
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{1},
+		},
 	},
 	"Fortress": {
-		{1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1},
-		{1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1},
-		{1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1},
-		{0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1},
-		{1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1},
-		{1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1},
-	},
-	"Pyramid": {
-		{0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
-		{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
-		{0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0},
-		{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-	},
-	"Cross": {
-		{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
-		{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
-		{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+		{
+			{1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1},
+			{1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1},
+			{1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1},
+			{0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+			{1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1},
+			{1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1},
+			{1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1},
+			{72},
+		},
+		{
+			{0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0},
+			{0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0},
+			{0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0},
+			{0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+			{0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0},
+			{0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0},
+			{0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0},
+			{44},
+		},
+		{
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0},
+			{0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0},
+			{0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{24},
+		},
+		{
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{4},
+		},
 	},
 	"Arena": {
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
-		{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
-		{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+		{
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+			{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+			{80},
+		},
+		{
+			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+			{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+			{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+			{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+			{36},
+		},
+		{
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+			{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+			{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
+			{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{28},
+		},
 	},
 }
 
-var layoutNames = []string{"Classic", "Fortress", "Pyramid", "Cross", "Arena"}
-var themeNames = []string{"yellow", "blue", "green", "red", "purple", "aqua", "orange", "pink"}
+// Check if a brick position is free (can be selected)
+func mahjonggIsBrickFree(board [][][]*mahjonggBrick, layer, row, col int) bool {
+	brick := board[layer][row][col]
+	if brick == nil || brick.removed {
+		return false
+	}
+
+	// Check if there's a brick on top
+	if layer+1 < len(board) {
+		if board[layer+1][row][col] != nil && !board[layer+1][row][col].removed {
+			return false
+		}
+	}
+
+	// Check left side (need both left positions to be free)
+	leftFree := (col == 0) ||
+		(board[layer][row][col-1] == nil || board[layer][row][col-1].removed)
+
+	// Check right side (need both right positions to be free)
+	rightFree := (col == len(board[layer][row])-1) ||
+		(board[layer][row][col+1] == nil || board[layer][row][col+1].removed)
+
+	// At least one side must be completely free
+	return leftFree || rightFree
+}
+
+// Get all available (non-removed, typ=-1) brick positions
+func mahjonggGetAvailablePositions(board *[][][]*mahjonggBrick) []*mahjonggBrick {
+	var available []*mahjonggBrick
+
+	for layer := 0; layer < len(*board); layer++ {
+		for row := 0; row < len((*board)[layer]); row++ {
+			for col := 0; col < len((*board)[layer][row]); col++ {
+				brick := (*board)[layer][row][col]
+				if brick != nil && !brick.removed && brick.typ == -1 {
+					available = append(available, brick)
+				}
+			}
+		}
+	}
+
+	return available
+}
+
+// Check if position would be valid for placement (ensuring solvability)
+func mahjonggIsValidPlacement(board *[][][]*mahjonggBrick, brick *mahjonggBrick) bool {
+	layer, row, col := brick.layer, brick.row, brick.col
+
+	// Check if there's a brick on top that's already assigned
+	if layer+1 < len(*board) {
+		topBrick := (*board)[layer+1][row][col]
+		if topBrick != nil && !topBrick.removed && topBrick.typ != -1 {
+			return false // Can't place if brick above is already assigned
+		}
+	}
+
+	// At least one side must be free or will become free
+	leftFree := (col == 0) ||
+		((*board)[layer][row][col-1] == nil ||
+			(*board)[layer][row][col-1].removed ||
+			(*board)[layer][row][col-1].typ == -1)
+
+	rightFree := (col == len((*board)[layer][row])-1) ||
+		((*board)[layer][row][col+1] == nil ||
+			(*board)[layer][row][col+1].removed ||
+			(*board)[layer][row][col+1].typ == -1)
+
+	return leftFree || rightFree
+}
+
+// Update which bricks are currently blocked
+func mahjonggUpdateBlockedStatus(board *[][][]*mahjonggBrick) {
+	for layer := 0; layer < len(*board); layer++ {
+		for row := 0; row < len((*board)[layer]); row++ {
+			for col := 0; col < len((*board)[layer][row]); col++ {
+				brick := (*board)[layer][row][col]
+				if brick != nil && !brick.removed {
+					brick.blocked = !mahjonggIsBrickFree(*board, layer, row, col)
+				}
+			}
+		}
+	}
+}
+
+// Guess for now board size will be static 14x8
+// no pun intended, this is 9front's size of `games/mahjongg`
+func mahjonggBoardCreate(layout string) [][][]*mahjonggBrick {
+	/* Example:
+	board := { // Board
+		{ 	   	// Layer1
+			{28},
+			{*mahjonggBrick, *mahjonggBrick...}, // blocked = true or false
+			...
+			{*mahjonggBrick, *mahjonggBrick...}, // removed = true or false
+		},
+		{       // Layer2
+			...
+		},
+	}
+	*/
+	layoutData := mahjonggLayouts[layout]
+	numLayers := len(layoutData)
+
+	board := make([][][]*mahjonggBrick, numLayers)
+
+	for layer := 0; layer < numLayers; layer++ {
+		numRows := len(layoutData[layer]) - 1
+		board[layer] = make([][]*mahjonggBrick, numRows)
+
+		for row := 0; row < numRows; row++ {
+			numCols := len(layoutData[layer][0])
+			board[layer][row] = make([]*mahjonggBrick, numCols)
+
+			for col := 0; col < len(mahjonggLayouts[layout][layer][row]); col++ {
+				if layoutData[layer][row][col] == 1 {
+					newBrick := mahjonggBrick{
+						typ:     -1, // -1 means type not yet assigned
+						elem:    nil,
+						layer:   layer,
+						row:     row,
+						col:     col,
+						blocked: true,  // Will be calculated later
+						removed: false, // It exists initially
+					}
+					board[layer][row][col] = &newBrick
+				}
+				// If layout value is 0, the position remains nil, representing empty space.
+			}
+		}
+	}
+	return board
+}
+func mahjonggBoardFill(board *[][][]*mahjonggBrick) {
+	// Get all brick positions that need to be filled
+	available := mahjonggGetAvailablePositions(board)
+	totalBricks := len(available)
+
+	if totalBricks == 0 || totalBricks%2 != 0 {
+		// Invalid board - must have even number of bricks
+		return
+	}
+
+	// Shuffle available positions for randomness
+	rand.Shuffle(len(available), func(i, j int) {
+		available[i], available[j] = available[j], available[i]
+	})
+
+	totalTileTypes := mahjonggGetTotalTileTypes() // 42 unique tiles
+	//	pairsNeeded := totalBricks / 2
+
+	// Create tile ID pool - each tile appears at least enough times
+	tilePool := make([]int, 0, totalBricks)
+
+	// Flowers and Seasons are unique (only 1 of each can match with itself)
+	// Other tiles appear in sets of 4 in real Mahjong
+	for tileID := 0; tileID < totalTileTypes; tileID++ {
+		// For simplicity, just ensure we have enough pairs
+		// You can make this more sophisticated later
+		tilesOfThisType := 4 // Standard mahjong has 4 of each
+
+		// Add this tile type enough times
+		for i := 0; i < tilesOfThisType && len(tilePool) < totalBricks; i++ {
+			tilePool = append(tilePool, tileID)
+		}
+	}
+
+	// Shuffle the tile pool
+	rand.Shuffle(len(tilePool), func(i, j int) {
+		tilePool[i], tilePool[j] = tilePool[j], tilePool[i]
+	})
+
+	// Assign tiles in pairs to ensure solvability
+	poolIndex := 0
+	for i := 0; i < len(available)-1; i += 2 {
+		// Pick a tile type
+		tileID := tilePool[poolIndex]
+		poolIndex++
+
+		// Assign to two bricks
+		brick1 := available[i]
+		brick2 := available[i+1]
+
+		// Verify both positions are valid
+		if mahjonggIsValidPlacement(board, brick1) && mahjonggIsValidPlacement(board, brick2) {
+			brick1.typ = tileID
+			brick2.typ = tileID
+		} else {
+			// Try to find better positions if these aren't valid
+			// For now, just assign anyway - you can improve this with backtracking
+			brick1.typ = tileID
+			brick2.typ = tileID
+		}
+	}
+
+	// Update blocked status for all bricks
+	mahjonggUpdateBlockedStatus(board)
+}
 
 func mahjonggConstruct(window *wm.RiwoWindow) {
 	themeIdx := 0
 	layoutIdx := 0
-	theme := wm.ThemeMap[themeNames[themeIdx]]
+	theme := wm.ThemeMap[mahjonggThemeNames[themeIdx]]
 
-	var bricks []*brick
-	var selected *brick
+	var board [][][]*mahjonggBrick
+	var selected *mahjonggBrick
 	var startTime time.Time
 	var timerStop bool
 
@@ -105,13 +420,13 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		Style("color", theme["vivid"]).
 		Style("fontWeight", "bold")
 
-	board := wm.Create().
+	boardElem := wm.Create().
 		Style("position", "relative").
 		Style("display", "inline-block").
 		Style("width", "36rem").
-		Style("height", "24rem") // something like that // TODO make adequate dimensions
+		Style("height", "26rem")
 
-	container.Append(timerElem, board)
+	container.Append(timerElem, boardElem)
 	window.Content.Inner("").Append(container)
 
 	// Timer update
@@ -135,56 +450,19 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		}), 1000)
 	}
 
-	// Update blocked state
-	updateBlocked := func() {
-		for _, b := range bricks {
-			if b.removed {
-				continue
-			}
-			b.blocked = false
-
-			// Check if covered from above
-			for _, other := range bricks {
-				if !other.removed && other.layer > b.layer && other.row == b.row && other.col == b.col {
-					b.blocked = true
-					break
-				}
-			}
-
-			// Check if both sides blocked
-			if !b.blocked {
-				left, right := false, false
-				for _, other := range bricks {
-					if other.removed || other.layer != b.layer || other == b {
-						continue
-					}
-					if other.row == b.row {
-						if other.col == b.col-1 {
-							left = true
-						}
-						if other.col == b.col+1 {
-							right = true
-						}
-					}
-				}
-				b.blocked = left && right
-			}
-
-			if b.blocked {
-				b.elem.Style("filter", "brightness(0.6)").Style("cursor", "not-allowed")
-			} else {
-				b.elem.Style("filter", "brightness(1)").Style("cursor", wm.CursorInvertUrl)
-			}
-		}
-	}
-
 	// Check win
 	checkWin := func() {
-		for _, b := range bricks {
-			if !b.removed {
-				return
+		for layer := 0; layer < len(board); layer++ {
+			for row := 0; row < len(board[layer]); row++ {
+				for col := 0; col < len(board[layer][row]); col++ {
+					brick := board[layer][row][col]
+					if brick != nil && !brick.removed {
+						return
+					}
+				}
 			}
 		}
+
 		timerStop = true
 		elapsed := time.Since(startTime)
 		min := int(elapsed.Minutes())
@@ -195,7 +473,7 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		}
 
 		wm.Create().
-			Text("You Won!\nTime: " + strconv.Itoa(min) + ":" + secStr).
+			Text("You Won!\nTime: "+strconv.Itoa(min)+":"+secStr).
 			Style("position", "absolute").
 			Style("top", "50%").
 			Style("left", "50%").
@@ -211,16 +489,21 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 			Style("whiteSpace", "pre-line").
 			Style("boxShadow", "0 0.25rem 0.5rem rgba(0,0,0,0.3)").
 			Style("zIndex", "1000").
-			Mount(board)
+			Mount(boardElem)
 	}
 
 	// Check dead end
 	checkDeadEnd := func() {
 		hasRemaining := false
-		for _, b := range bricks {
-			if !b.removed {
-				hasRemaining = true
-				break
+		for layer := 0; layer < len(board); layer++ {
+			for row := 0; row < len(board[layer]); row++ {
+				for col := 0; col < len(board[layer][row]); col++ {
+					brick := board[layer][row][col]
+					if brick != nil && !brick.removed {
+						hasRemaining = true
+						break
+					}
+				}
 			}
 		}
 		if !hasRemaining {
@@ -228,24 +511,22 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		}
 
 		// Check for valid moves
-		var free []*brick
-		for _, b := range bricks {
-			if !b.removed && !b.blocked {
-				free = append(free, b)
+		var free []*mahjonggBrick
+		for layer := 0; layer < len(board); layer++ {
+			for row := 0; row < len(board[layer]); row++ {
+				for col := 0; col < len(board[layer][row]); col++ {
+					brick := board[layer][row][col]
+					if brick != nil && !brick.removed && !brick.blocked {
+						free = append(free, brick)
+					}
+				}
 			}
 		}
 
 		hasMove := false
 		for i := 0; i < len(free); i++ {
 			for j := i + 1; j < len(free); j++ {
-				// Check match (flowers match any flower)
-				match := false
-				if free[i].typ >= 600 && free[i].typ < 700 && free[j].typ >= 600 && free[j].typ < 700 {
-					match = true
-				} else if free[i].typ == free[j].typ {
-					match = true
-				}
-				if match {
+				if free[i].typ == free[j].typ {
 					hasMove = true
 					break
 				}
@@ -274,12 +555,32 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 				Style("whiteSpace", "pre-line").
 				Style("boxShadow", "0 0.25rem 0.5rem rgba(0,0,0,0.3)").
 				Style("zIndex", "1000").
-				Mount(board)
+				Mount(boardElem)
+		}
+	}
+
+	// Update visual state based on blocked status
+	updateBrickVisuals := func() {
+		for layer := 0; layer < len(board); layer++ {
+			for row := 0; row < len(board[layer]); row++ {
+				for col := 0; col < len(board[layer][row]); col++ {
+					brick := board[layer][row][col]
+					if brick == nil || brick.removed {
+						continue
+					}
+
+					if brick.blocked {
+						brick.elem.Style("filter", "brightness(0.6)").Style("cursor", "not-allowed")
+					} else {
+						brick.elem.Style("filter", "brightness(1)").Style("cursor", wm.CursorInvertUrl)
+					}
+				}
+			}
 		}
 	}
 
 	// Click handler
-	onBrickClick := func(b *brick) {
+	onBrickClick := func(b *mahjonggBrick) {
 		if b.removed || b.blocked {
 			return
 		}
@@ -292,20 +593,14 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 			b.elem.Style("backgroundColor", theme["normal"])
 		} else {
 			// Check match
-			match := false
-			if selected.typ >= 600 && selected.typ < 700 && b.typ >= 600 && b.typ < 700 {
-				match = true
-			} else if selected.typ == b.typ {
-				match = true
-			}
-
-			if match {
+			if selected.typ == b.typ {
 				selected.removed = true
 				selected.elem.Style("display", "none")
 				b.removed = true
 				b.elem.Style("display", "none")
 				selected = nil
-				updateBlocked()
+				mahjonggUpdateBlockedStatus(&board)
+				updateBrickVisuals()
 				checkWin()
 				checkDeadEnd()
 			} else {
@@ -316,32 +611,13 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		}
 	}
 
-	// Make brick
-	makeBrick := func(typ, layer, row, col int) *brick {
-		cat := typ / 100
-		idx := typ % 100
+	// Create visual element for brick
+	createBrickElement := func(brick *mahjonggBrick) {
+		symbol := mahjonggGetTileEmoji(brick.typ)
 
-		var symbol string
-		switch cat {
-		case 1:
-			symbol = tiles["Dots"][idx]
-		case 2:
-			symbol = tiles["Bamboo"][idx]
-		case 3:
-			symbol = tiles["Chars"][idx]
-		case 4:
-			symbol = tiles["Winds"][idx]
-		case 5:
-			symbol = tiles["Dragons"][idx]
-		case 6:
-			symbol = tiles["Flowers"][idx]
-		default:
-			symbol = "?"
-		}
-
-		left := float64(col)*2.5 + float64(layer)*0.25
-		top := float64(row)*3.125 + float64(layer)*0.25
-		zindex := layer*100 + row
+		left := float64(brick.col)*2.5 + float64(brick.layer)*0.25
+		top := float64(brick.row)*3.125 - float64(brick.layer)*0.25
+		zindex := brick.layer*100 + brick.row
 
 		elem := wm.Create().
 			Text(symbol).
@@ -361,120 +637,72 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 			Style("userSelect", "none").
 			Style("boxShadow", "0.125rem 0.125rem 0.25rem rgba(0,0,0,0.3)")
 
-		b := &brick{
-			typ:   typ,
-			elem:  elem,
-			layer: layer,
-			row:   row,
-			col:   col,
-		}
+		brick.elem = elem
 
 		elem.Listen("mousedown", func(this js.Value, args []js.Value) interface{} {
-			onBrickClick(b)
+			onBrickClick(brick)
 			return nil
 		})
 
-		return b
+		boardElem.Append(elem)
 	}
 
 	// Start game
 	startGame := func() {
-		bricks = []*brick{}
 		selected = nil
-		board.Inner("")
+		boardElem.Inner("")
 		timerStop = false
 		startTime = time.Now()
 
-		layout := layouts[layoutNames[layoutIdx]]
+		// Create and fill board
+		board = mahjonggBoardCreate(mahjonggLayoutNames[layoutIdx])
+		mahjonggBoardFill(&board)
 
-		// Generate tile pool
-		pool := []int{}
-		for i := 1; i <= 9; i++ {
-			for j := 0; j < 4; j++ {
-				pool = append(pool, 100+i) // Dots
-			}
-		}
-		for i := 1; i <= 9; i++ {
-			for j := 0; j < 4; j++ {
-				pool = append(pool, 200+i) // Bamboo
-			}
-		}
-		for i := 1; i <= 9; i++ {
-			for j := 0; j < 4; j++ {
-				pool = append(pool, 300+i) // Chars
-			}
-		}
-		for i := 1; i <= 4; i++ {
-			for j := 0; j < 4; j++ {
-				pool = append(pool, 400+i) // Winds
-			}
-		}
-		for i := 1; i <= 3; i++ {
-			for j := 0; j < 4; j++ {
-				pool = append(pool, 500+i) // Dragons
-			}
-		}
-		for i := 1; i <= 4; i++ {
-			pool = append(pool, 600+i) // Flowers
-			pool = append(pool, 600+i)
-		}
-
-		// Shuffle
-		rng := time.Now().UnixNano()
-		for i := len(pool) - 1; i > 0; i-- {
-			rng = (rng*1103515245 + 12345) & 0x7fffffff
-			j := int(rng) % (i + 1)
-			pool[i], pool[j] = pool[j], pool[i]
-		}
-
-		// Place tiles
-		poolIdx := 0
-		for layer := 0; layer < 3; layer++ {
-			for row := 0; row < len(layout); row++ {
-				for col := 0; col < len(layout[row]); col++ {
-					if layout[row][col] == 0 {
-						continue
+		// Create visual elements for all bricks
+		for layer := 0; layer < len(board); layer++ {
+			for row := 0; row < len(board[layer]); row++ {
+				for col := 0; col < len(board[layer][row]); col++ {
+					brick := board[layer][row][col]
+					if brick != nil {
+						createBrickElement(brick)
 					}
-					if layer > 0 && (row < 1 || row > 5 || col < 2 || col > 11) {
-						continue
-					}
-					if poolIdx >= len(pool) {
-						poolIdx = 0
-					}
-					b := makeBrick(pool[poolIdx], layer, row, col)
-					bricks = append(bricks, b)
-					board.Append(b.elem)
-					poolIdx++
 				}
 			}
 		}
 
-		updateBlocked()
+		mahjonggUpdateBlockedStatus(&board)
+		updateBrickVisuals()
 		updateTimer()
 	}
 
 	// Cycle theme
 	cycleTheme := func() {
-		themeIdx = (themeIdx + 1) % len(themeNames)
-		theme = wm.ThemeMap[themeNames[themeIdx]]
+		themeIdx = (themeIdx + 1) % len(mahjonggThemeNames)
+		theme = wm.ThemeMap[mahjonggThemeNames[themeIdx]]
 
 		container.Style("backgroundColor", theme["faded"])
 		timerElem.Style("color", theme["vivid"])
 
-		for _, b := range bricks {
-			if !b.removed {
-				if b == selected {
-					b.elem.Style("backgroundColor", theme["vivid"])
-				} else {
-					b.elem.Style("backgroundColor", theme["normal"])
+		for layer := 0; layer < len(board); layer++ {
+			for row := 0; row < len(board[layer]); row++ {
+				for col := 0; col < len(board[layer][row]); col++ {
+					brick := board[layer][row][col]
+					if brick != nil && !brick.removed {
+						if brick == selected {
+							brick.elem.Style("backgroundColor", theme["vivid"])
+						} else {
+							brick.elem.Style("backgroundColor", theme["normal"])
+						}
+						brick.elem.Style("border", "0.125rem solid "+theme["vivid"])
+					}
 				}
-				b.elem.Style("border", "0.125rem solid "+theme["vivid"])
 			}
 		}
 	}
+
 	// Cycle layout
 	cycleLayout := func() {
-		layoutIdx = (layoutIdx + 1) % len(layoutNames)
+		layoutIdx = (layoutIdx + 1) % len(mahjonggLayoutNames)
 		startGame()
 	}
 
