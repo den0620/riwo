@@ -18,6 +18,8 @@ Credits to Go team for their [Go fonts](https://go.dev/blog/go-fonts)
 
 Try it here: [deployment](https://ninefid.uk.to/riwo)
 
+I would like to see any contribution
+
 ## Roadmap
 ### Actions
 - [x] New
@@ -27,6 +29,7 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 - [x] Hide
 - [x] Window-specific context menu entries
 - [x] Bearable apps
+- [ ] Make apps load as modules, not monolithic wasm
 ### Accessibility
 - [x] Touch adaptation
 ### Default apps
@@ -38,6 +41,9 @@ Try it here: [deployment](https://ninefid.uk.to/riwo)
 - [ ] Gallery (`?`)
 - [ ] Monaco Editor (`?`)
 - [ ] Drawterm (`?`)
+- [ ] Doom (`Doom`?)
+- [ ] BoxedWine (`?`)
+- [ ] Deus Ex Demo (`DXdemo`?)
 
 ## Possible known issues
 
