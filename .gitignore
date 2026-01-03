@@ -1,1 +1,4 @@
 .idea
+
+# If you want to exclude monaco from rero: here it is
+# apps/Monaco

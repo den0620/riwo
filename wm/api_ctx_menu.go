@@ -44,13 +44,13 @@ func CreateMenuObject(text string) MenuObject {
 		Text(text).
 		Style("cursor", CursorInvertUrl).
 		Style("padding", "10px").
-		Style("background-color", ThemeMap["green"]["faded"]).
+		Style("background-color", themeMap["green"]["faded"]).
 		Listen("mouseover", func(this js.Value, args []js.Value) interface{} {
-			item.Style("background-color", ThemeMap["green"]["vivid"])
+			item.Style("background-color", themeMap["green"]["vivid"])
 			return nil
 		}).
 		Listen("mouseout", func(this js.Value, args []js.Value) interface{} {
-			item.Style("background-color", ThemeMap["green"]["faded"])
+			item.Style("background-color", themeMap["green"]["faded"])
 			return nil
 		})
 
@@ -70,8 +70,8 @@ func InitializeContextMenu() {
 		Set("id", "contextMenu").
 		Style("position", "absolute").
 		Style("display", "none").
-		Style("background-color", ThemeMap["green"]["normal"]).
-		Style("border", "solid "+ThemeMap["green"]["normal"]).
+		Style("background-color", themeMap["green"]["normal"]).
+		Style("border", "solid "+themeMap["green"]["normal"]).
 		Style("padding", "0").
 		Style("text-align", "center")
 
@@ -96,7 +96,7 @@ func InitializeContextMenu() {
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", CursorSelectUrl)
 
 			ContextMenu.Style("display", "none")
-			Print("Move mode activated.")
+			JSLog("Move mode activated.")
 		}
 		return nil
 	})
@@ -111,7 +111,7 @@ func InitializeContextMenu() {
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", CursorSelectUrl)
 
 			ContextMenu.Style("display", "none")
-			Print("Resize mode activated.")
+			JSLog("Resize mode activated.")
 		}
 		return nil
 	})
@@ -126,7 +126,7 @@ func InitializeContextMenu() {
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", CursorSelectUrl)
 
 			ContextMenu.Style("display", "none")
-			Print("Delete mode activated.")
+			JSLog("Delete mode activated.")
 		}
 		return nil
 	})
@@ -138,7 +138,7 @@ func InitializeContextMenu() {
 			IsHiding = true
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", CursorSelectUrl)
 			ContextMenu.Style("display", "none")
-			Print("Hide mode activated.")
+			JSLog("Hide mode activated.")
 		}
 		return nil
 	})
@@ -158,7 +158,7 @@ func InitializeContextMenu() {
 
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", CursorSelectUrl)
 			ContextMenu.Style("display", "none")
-			Print("New mode activated. Select an area to create a window.")
+			JSLog("New mode activated. Select an area to create a window.")
 		}
 		return nil
 	})
@@ -205,7 +205,7 @@ func InitializeContextMenu() {
 						customOption.Callback()
 						ContextMenu.Style("display", "none") // hide menu after click
 						JustSelected = false
-						Print("Custom option " + customOption.Name + " called")
+						JSLog("Custom option " + customOption.Name + " called")
 						return nil
 					})
 					ContextMenu.AppendByDom(opt.DOM())

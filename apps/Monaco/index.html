@@ -1,0 +1,90 @@
+<!DOCTYPE html >
+<html lang="ru">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" href="./min/vs/editor/editor.main.css" />
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+        #container {
+            width: 100%;
+            height: 100%;
+        }
+        #editor {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <title>Monaco Editor</title>
+</head>
+<body>
+<div id="container">
+    <div id="editor"></div>
+</div>
+
+<script src="./min/vs/loader.js"></script>
+
+<script>
+    require.config({
+        paths: {
+            'vs': new URL('./min/vs', window.location).href,
+            'markdown': './min/vs/basic-languages/markdown/markdown.js'
+        }
+    });
+
+    let editor;
+    let isInitialized = false;
+
+    function initMonaco() {
+        if (isInitialized) return;
+        
+        require(['vs/editor/editor.main'], function() {
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'vs-dark' : 'vs-light';
+            
+            editor = monaco.editor.create(document.getElementById('editor'), {
+                value: '// Fetching results...\n',
+                language: 'go',
+                theme: systemTheme,
+                automaticLayout: true,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false
+            });
+
+            //editor.onDidChangeModelContent(updatePreview);
+            //updatePreview();
+
+            isInitialized = true;
+            console.log('Monaco initialized');
+        });
+    }
+
+    function updateContent(content, language) {
+        if (!isInitialized) {
+            console.warn('Editor not initialized yet');
+            setTimeout(() => updateContent(content, language), 500);
+            initMonaco();
+            return;
+        }
+
+        try {
+            editor.setValue(content || '');
+            const model = editor.getModel();
+            if (model && language) {
+                monaco.editor.setModelLanguage(model, language);
+            }
+            // preview unavailable at the moment :(
+        } catch (e) {
+            console.error('Update error:', e);
+        }
+
+        
+    }
+updateContent();
+</script>
+</body>
+</html>

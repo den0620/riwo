@@ -31,7 +31,7 @@ func LaunchDefault(this js.Value, args []js.Value) interface{} {
 	fetchedWindow, ok := wm.AllWindows[strconv.Itoa(num)]
 	if !ok {
 		// Im really not okay (trust me)
-		js.Global().Get("console").Call("log", "Couldn't start APP_default on window " + strconv.Itoa(num))
+		js.Global().Get("console").Call("log", "Couldn't start APP_default on window "+strconv.Itoa(num))
 		return nil
 	}
 
@@ -73,4 +73,3 @@ For logging there are:
 
 	<-c
 }
-

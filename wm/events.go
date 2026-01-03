@@ -24,7 +24,7 @@ func InitializeGlobalMouseEvents() {
 				Style("left", Ftoa(x)+"px").
 				Style("top", Ftoa(y)+"px")
 
-			Print("Ghost window is moving.")
+			JSLog("Ghost window is moving.")
 		}
 
 		// In "Resize" mode adjust ghost window size
@@ -50,7 +50,7 @@ func InitializeGlobalMouseEvents() {
 					Style("top", Ftoa(currentY)+"px").
 					Style("height", Ftoa(-height)+"px")
 			}
-			Print("Ghost window is resizing with freeform selection.")
+			JSLog("Ghost window is resizing with freeform selection.")
 		}
 
 		// In "New" mode adjusting selection
@@ -75,7 +75,7 @@ func InitializeGlobalMouseEvents() {
 					Style("top", Ftoa(currentY)+"px").
 					Style("height", Ftoa(-height)+"px")
 			}
-			Print("New window selection resizing.")
+			JSLog("New window selection resizing.")
 		}
 
 		return nil
@@ -92,7 +92,7 @@ func InitializeGlobalMouseEvents() {
 			JustSelected = true
 
 			// Second RMB hold - Start resizing by creating a selection anywhere
-			Print("Second right-click: Resizing initiated.")
+			JSLog("Second right-click: Resizing initiated.")
 
 			IsDragging = true
 
@@ -112,12 +112,12 @@ func InitializeGlobalMouseEvents() {
 
 			js.Global().Get("document").Get("body").Call("appendChild", GhostWindow.DOM()) // <-- !!!
 
-			Print("Resizing initiated with freeform selection.")
+			JSLog("Resizing initiated with freeform selection.")
 		}
 		// Cancel menu and reset all modes on leftclick.
 		if args[0].Get("button").Int() == 0 {
 			if ContextMenu.DOM().Type() == js.TypeUndefined {
-				Print("ContextMenu is UNDEFINED!")
+				JSLog("ContextMenu is UNDEFINED!")
 				// Or handle the error appropriately
 			} else {
 				ContextMenu.Style("display", "none")
@@ -160,7 +160,7 @@ func InitializeGlobalMouseEvents() {
 				GhostWindow.Delete()       // Reset ghost window reference
 			}
 			JustSelected = false
-			Print("Dragging ended and window teleported to ghost position.")
+			JSLog("Dragging ended and window teleported to ghost position.")
 		}
 
 		// In "Resize" stop selecting (Teleport to ghost)
@@ -184,7 +184,7 @@ func InitializeGlobalMouseEvents() {
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
 			JustSelected = false
 
-			Print("Resizing completed and window resized to match selection.")
+			JSLog("Resizing completed and window resized to match selection.")
 		}
 
 		// In "New" make new window
@@ -195,23 +195,25 @@ func InitializeGlobalMouseEvents() {
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
 			// Create a new window at the ghost window's position and size
 			if GhostWindow.DOM().Truthy() {
-				x := GhostWindow.From("style").Get("left").String()
-				y := GhostWindow.From("style").Get("top").String()
-				width := GhostWindow.From("style").Get("width").String()
-				height := GhostWindow.From("style").Get("height").String()
 
+				placement := windowPlacement{
+					x:      GhostWindow.From("style").Get("left").String(),
+					y:      GhostWindow.From("style").Get("top").String(),
+					width:  GhostWindow.From("style").Get("width").String(),
+					height: GhostWindow.From("style").Get("height").String(),
+				}
 				GhostWindow.Call("remove")
 				GhostWindow.Delete()
 
-				newWindow := CreateWindow(x, y, width, height, "")
+				newWindow := createWindow(&placement, "")
 
 				JustSelected = false
-				Print("New window created at selected area.")
+				JSLog("New window created at selected area.")
 				// Intends existance of default app
 				defaultInit := js.Global().Get("LaunchDefault")
 				go defaultInit.Invoke(newWindow.ID)
 
-				Print("LaunchDefault attached to the new window")
+				JSLog("LaunchDefault attached to the new window")
 			}
 		}
 

@@ -6,6 +6,7 @@ and its functions + listeners
 package wm
 
 import (
+	"fmt"
 	"strconv"
 	"syscall/js"
 )
@@ -19,13 +20,25 @@ type ContextEntry struct {
 // Type `RiwoWindow` manages single abstract window’s properties.
 type RiwoWindow struct {
 	ID          int            // For the most part unites DOM object and Go object
+	Title       string         // Yes, Riwo, Window title.
 	Content     *RiwoObject    // Connected DOM element.
 	MenuEntries []ContextEntry // Tho "Move", "Resize", "Delete" and "Hide" are basic ones
 }
 
-// CreateWindow
+// windowPlacement is a data container, visible only in `wm` package
+// Functions which manage windows, don't need information about window location
+// Once call of this structure is a call from big arguments of `CreateWindow` function.
+// It would be better if Riwo will try to hide `wm` implementation details from other packages.
+type windowPlacement struct {
+	x      string
+	y      string
+	width  string
+	height string
+}
+
+// createWindow
 // Creates a new Window, sets up its DOM element, and returns a pointer.
-func CreateWindow(x, y, w, h, content string) *RiwoWindow {
+func createWindow(p *windowPlacement, content string) *RiwoWindow {
 	WindowCount++
 	id := WindowCount
 
@@ -37,10 +50,10 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 	windowContent := Create().
 		Style("overflow", "hidden").
 		Style("position", "absolute").
-		Style("width", w).
-		Style("height", h).
-		Style("top", y).
-		Style("left", x).
+		Style("width", p.width).
+		Style("height", p.height).
+		Style("top", p.y).
+		Style("left", p.x).
 		Style("z-index", strconv.Itoa(HighestZIndex)).
 		Style("background-color", "#f0f0f0").
 		Style("border", "solid #55AAAA").
@@ -50,12 +63,13 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 		Mount(bodyContent)
 
 	// Logging
-	Print("Generated window's ID (wid) is \"" +
+	JSLog("Generated window's ID (wid) is \"" +
 		strconv.Itoa(id) + "\"")
 
 	window := &RiwoWindow{
 		ID:      id,
 		Content: windowContent,
+		Title:   fmt.Sprintf(" (wid=%d)", id),
 		// No custom ContextEntries
 	}
 
@@ -78,7 +92,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 			args[0].Call("stopPropagation")
 
 			JustSelected = true
-			Print("First right-click: Window selected for resizing.")
+			JSLog("First right-click: Window selected for resizing.")
 
 			windowContent.Style("z-index", strconv.Itoa(HighestZIndex))
 			HighestZIndex++
@@ -91,7 +105,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 		if !IsResizingInit {
 			HighestZIndex++
 			windowContent.Style("z-index", strconv.Itoa(HighestZIndex))
-			Print("Window brought to front.")
+			JSLog("Window brought to front.")
 
 			if IsMovingMode && args[0].Get("button").Int() == 2 {
 				args[0].Call("preventDefault")
@@ -118,7 +132,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 					Mount(bodyContent) // |<-- Append it to bodyContent
 
 				JustSelected = true
-				Print("Dragging initiated with ghost window.")
+				JSLog("Dragging initiated with ghost window.")
 			}
 
 			if IsHiding && args[0].Get("button").Int() == 2 {
@@ -128,7 +142,8 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 				JustSelected = true
 				IsHiding = false
 
-				hiddenWindowOption := CreateMenuObject("wid " + strconv.Itoa(window.ID))
+				// prepare menu item
+				hiddenWindowOption := CreateMenuObject(fmt.Sprintf("%s (#%d)", window.Title, window.ID))
 
 				if windowContent.From("title").String() != "" {
 					hiddenWindowOption = CreateMenuObject(windowContent.From("title").String())
@@ -155,7 +170,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 							}
 						}
 						JustSelected = false
-						Print("Unhide activated.")
+						JSLog("Unhide activated.")
 					}
 					return nil
 				})
@@ -165,7 +180,7 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 				bodyContent.Style("cursor", "url(assets/cursor.svg), auto")
 
 				JustSelected = false
-				Print("WID " + strconv.Itoa(window.ID) + " hidden")
+				JSLog("WID " + strconv.Itoa(window.ID) + " hidden")
 
 			}
 		}
@@ -175,13 +190,13 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 			args[0].Call("stopPropagation")
 
 			JustSelected = true
-			RemoveWindow(window)
+			removeWindow(window)
 			IsDeleteMode = false
 
 			js.Global().Get("document").Get("body").Get("style").Set("cursor", "url(assets/cursor.svg), auto")
 
 			JustSelected = false
-			Print("Window deleted.")
+			JSLog("Window deleted.")
 		}
 		return nil
 	})
@@ -189,19 +204,9 @@ func CreateWindow(x, y, w, h, content string) *RiwoWindow {
 	return window
 }
 
-// Position
-// Sets position and dimensions for the window. (Actually useless)
-func (w *RiwoWindow) Position(newX, newY, newWidth, newHeight string) {
-	w.Content.
-		Style("left", newX).
-		Style("top", newY).
-		Style("width", newWidth).
-		Style("height", newHeight)
-}
-
-// RemoveWindow
+// removeWindow
 // Deletes the window from DOM and Go.
-func RemoveWindow(w *RiwoWindow) {
+func removeWindow(w *RiwoWindow) {
 	w.ID = -1                              // Remove reference for apps
 	w.Content.Call("remove")               // Remove html part
 	delete(AllWindows, strconv.Itoa(w.ID)) // Remove from list

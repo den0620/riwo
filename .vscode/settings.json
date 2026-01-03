@@ -2,5 +2,6 @@
     "go.toolsEnvVars": {
         "GOOS": "js",
         "GOARCH": "wasm"
-    }
+    },
+    "livePreview.defaultPreviewPath": "/index.html"
 }
