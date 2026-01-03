@@ -11,9 +11,11 @@ func init() {
 }
 
 func clockConstruct(window *wm.RiwoWindow) {
+	window.Title = "ZClock"
+
 	//fg := wm.ThemeMap["aqua"]["normal"] // not used so compiler will shit its pants
-	mg := wm.ThemeMap["aqua"]["vivid"]
-	bg := wm.ThemeMap["aqua"]["faded"]
+	mg := wm.GetBorderColorStr("aqua")
+	bg := wm.GetBackgroundColorStr("aqua")
 
 	container := wm.Create()
 	container.
@@ -60,7 +62,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 
 	utcInput := wm.Create()
 	utcInput.
-	    Text(strconv.Itoa(-js.Global().Get("Date").New().Call("getTimezoneOffset").Int()/60)).
+		Text(strconv.Itoa(-js.Global().Get("Date").New().Call("getTimezoneOffset").Int()/60)).
 		Style("minWidth", "30px").
 		Style("textAlign", "center")
 
@@ -94,30 +96,30 @@ func clockConstruct(window *wm.RiwoWindow) {
 
 	themeKey := "aqua"
 
-	for key, theme := range wm.ThemeMap { // <-- not sure
-		wm.Print("\tTheme["+key+"] -> "+themeKey) // was "theme" but gave an error
+	for key, theme := range *wm.GetThemesMap() { // <-- not sure
+		wm.JSLog("\tTheme[" + key + "] -> " + themeKey) // was "theme" but gave an error
 		themeButton := wm.Create()
 
 		applyThemeToButton(themeButton, theme)
 
 		out := func(this js.Value, args []js.Value) interface{} {
-			themeButton.Style("backgroundColor", wm.ThemeMap[key]["faded"])
+			themeButton.Style("backgroundColor", wm.GetBorderColorStr(key))
 			return nil
 		}
 		over := func(this js.Value, args []js.Value) interface{} {
-			themeButton.Style("backgroundColor", wm.ThemeMap[key]["normal"])
+			themeButton.Style("backgroundColor", wm.GetFontColorStr(key))
 			return nil
 		}
 
 		click := func(this js.Value, args []js.Value) interface{} {
 			newTheme := this.Get("textContent").String()
 
-			container.Style("backgroundColor", wm.ThemeMap[newTheme]["faded"])
-			clock.Style("color", wm.ThemeMap[newTheme]["vivid"])
-			settingsTitle.Style("color", wm.ThemeMap[newTheme]["vivid"])
+			container.Style("backgroundColor", wm.GetBackgroundColorStr(newTheme))
+			clock.Style("color", wm.GetBorderColorStr(newTheme))
+			settingsTitle.Style("color", wm.GetBorderColorStr(newTheme))
 
-			applyThemeToButton(utcHourDecrase, wm.ThemeMap[newTheme])
-			applyThemeToButton(utcHourIncrase, wm.ThemeMap[newTheme])
+			applyThemeToButton(utcHourDecrase, wm.GetTheme(newTheme))
+			applyThemeToButton(utcHourIncrase, wm.GetTheme(newTheme))
 
 			themeKey = newTheme
 			return nil
@@ -131,11 +133,11 @@ func clockConstruct(window *wm.RiwoWindow) {
 	}
 	// Poop the bank
 	decrDecorateMouseOver := func(this js.Value, args []js.Value) interface{} {
-		utcHourDecrase.Style("backgroundColor", wm.ThemeMap[themeKey]["normal"])
+		utcHourDecrase.Style("backgroundColor", wm.GetFontColorStr(themeKey))
 		return nil
 	}
 	decrDecorateMouseOut := func(this js.Value, args []js.Value) interface{} {
-		utcHourDecrase.Style("backgroundColor", wm.ThemeMap[themeKey]["faded"])
+		utcHourDecrase.Style("backgroundColor", wm.GetBackgroundColorStr(themeKey))
 		return nil
 	}
 	decrClick := func(this js.Value, args []js.Value) interface{} {
@@ -146,11 +148,11 @@ func clockConstruct(window *wm.RiwoWindow) {
 		return nil
 	}
 	incrDecorateMouseOver := func(this js.Value, args []js.Value) interface{} {
-		utcHourIncrase.Style("backgroundColor", wm.ThemeMap[themeKey]["normal"])
+		utcHourIncrase.Style("backgroundColor", wm.GetFontColorStr(themeKey))
 		return nil
 	}
 	incrDecorateMouseOut := func(this js.Value, args []js.Value) interface{} {
-		utcHourIncrase.Style("backgroundColor", wm.ThemeMap[themeKey]["faded"])
+		utcHourIncrase.Style("backgroundColor", wm.GetBackgroundColorStr(themeKey))
 		return nil
 	}
 	incrClick := func(this js.Value, args []js.Value) interface{} {
@@ -211,7 +213,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 					settings.Style("display", "none")
 					clock.Style("display", "block")
 				}
-				wm.Print("zclock settings toggled: " + strconv.FormatBool(isSettingsShown))
+				wm.JSLog("zclock settings toggled: " + strconv.FormatBool(isSettingsShown))
 			},
 		},
 	}
@@ -225,4 +227,3 @@ func clockConstruct(window *wm.RiwoWindow) {
 
 	updateClock.Invoke()
 }
-

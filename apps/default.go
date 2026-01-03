@@ -11,10 +11,12 @@ func init() {
 }
 
 func Construct(window *wm.RiwoWindow) {
-	bg := wm.ThemeMap["green"]["faded"]
-	mg := wm.ThemeMap["green"]["vivid"]
-	fg := wm.ThemeMap["green"]["normal"]
-	
+	window.Title = "Launchpad"
+
+	bg := wm.GetBackgroundColorStr("green")
+	mg := wm.GetBorderColorStr("green")
+	fg := wm.GetFontColorStr("green")
+
 	container := wm.Create()
 	container.
 		Style("display", "grid").
@@ -25,15 +27,15 @@ func Construct(window *wm.RiwoWindow) {
 		Style("height", "100%")
 
 	/*
-	title := wm.Create()
-	title.
-		Inner("Applications").
-		Style("gridColumn", "1 / -1").
-		Style("fontSize", "24px").
-		Style("color", mg).
-		Style("textAlign", "center").
-		Style("margin", "20px").
-		Mount(container)
+		title := wm.Create()
+		title.
+			Inner("Applications").
+			Style("gridColumn", "1 / -1").
+			Style("fontSize", "24px").
+			Style("color", mg).
+			Style("textAlign", "center").
+			Style("margin", "20px").
+			Mount(container)
 	*/
 
 	// This is an system Application
@@ -56,11 +58,18 @@ func Construct(window *wm.RiwoWindow) {
 
 		// prepare callbacks
 		init := func(this js.Value, args []js.Value) interface{} {
-			wm.Print("App " + appName + " selected")
+			wm.JSLog("App " + appName + " selected")
+
+			// warn: After window initizliation, it would be better if
+			// known application name was applied to window title.
+			//
+			// Elsewhere we have replaced window content and previous app name (Launchpad #wid)
+			window.Title = appName
+
 			appInit(window)
 			return nil
 		}
-		
+
 		out := func(this js.Value, args []js.Value) interface{} {
 			appButton.
 				Style("background", bg)

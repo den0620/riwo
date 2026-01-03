@@ -221,6 +221,7 @@ func mahjonggIsBrickFree(board [][][]*mahjonggBrick, layer, row, col int) bool {
 	// At least one side must be completely free
 	return leftFree || rightFree
 }
+
 // Get all available (non-removed, typ=-1) brick positions
 func mahjonggGetAvailablePositions(board *[][][]*mahjonggBrick) []*mahjonggBrick {
 	var available []*mahjonggBrick
@@ -238,6 +239,7 @@ func mahjonggGetAvailablePositions(board *[][][]*mahjonggBrick) []*mahjonggBrick
 
 	return available
 }
+
 // Check if position would be valid for placement (ensuring solvability)
 func mahjonggIsValidPlacement(board *[][][]*mahjonggBrick, brick *mahjonggBrick) bool {
 	layer, row, col := brick.layer, brick.row, brick.col
@@ -263,6 +265,7 @@ func mahjonggIsValidPlacement(board *[][][]*mahjonggBrick, brick *mahjonggBrick)
 
 	return leftFree || rightFree
 }
+
 // Update which bricks are currently blocked
 func mahjonggUpdateBlockedStatus(board *[][][]*mahjonggBrick) {
 	for layer := 0; layer < len(*board); layer++ {
@@ -276,6 +279,7 @@ func mahjonggUpdateBlockedStatus(board *[][][]*mahjonggBrick) {
 		}
 	}
 }
+
 // Guess for now board size will be static 14x8
 // no pun intended, this is 9front's size of `games/mahjongg`
 func mahjonggBoardCreate(layout string) [][][]*mahjonggBrick {
@@ -324,11 +328,12 @@ func mahjonggBoardCreate(layout string) [][][]*mahjonggBrick {
 	}
 	return board
 }
+
 // Get tile category ranges
 func mahjonggGetTileRanges() (flowerStart, flowerEnd, seasonStart, seasonEnd int) {
 	offset := 0
 	categoryOrder := []string{"Dots", "Bamboo", "Chars", "Winds", "Dragons", "Flowers", "Seasons"}
-	
+
 	for _, category := range categoryOrder {
 		tiles := mahjonggBrickTiles[category]
 		if category == "Flowers" {
@@ -342,17 +347,18 @@ func mahjonggGetTileRanges() (flowerStart, flowerEnd, seasonStart, seasonEnd int
 	}
 	return
 }
+
 // Check if two tiles match (flowers match any flower, seasons match any season)
 func mahjonggTilesMatch(typ1, typ2 int) bool {
 	flowerStart, flowerEnd, seasonStart, seasonEnd := mahjonggGetTileRanges()
-	
+
 	if typ1 >= flowerStart && typ1 < flowerEnd && typ2 >= flowerStart && typ2 < flowerEnd {
 		return true
 	}
 	if typ1 >= seasonStart && typ1 < seasonEnd && typ2 >= seasonStart && typ2 < seasonEnd {
 		return true
 	}
-	
+
 	return typ1 == typ2
 }
 
@@ -369,13 +375,13 @@ func mahjonggBoardFill(board *[][][]*mahjonggBrick) {
 	})
 
 	flowerStart, _, seasonStart, _ := mahjonggGetTileRanges()
-	
+
 	tilePool := make([]int, 0, totalBricks)
 
 	// Determine how many flowers and seasons to include
-	numFlowerPairs := 4  // All 4 flowers
-	numSeasonPairs := 4  // All 4 seasons
-	numSpecialBricks := (numFlowerPairs + numSeasonPairs) * 2  // 16 total
+	numFlowerPairs := 4                                       // All 4 flowers
+	numSeasonPairs := 4                                       // All 4 seasons
+	numSpecialBricks := (numFlowerPairs + numSeasonPairs) * 2 // 16 total
 	numRegularBricks := totalBricks - numSpecialBricks
 
 	// Add regular tiles (Dots, Bamboo, Chars, Winds, Dragons) in sets of 4
@@ -409,9 +415,10 @@ func mahjonggBoardFill(board *[][][]*mahjonggBrick) {
 }
 
 func mahjonggConstruct(window *wm.RiwoWindow) {
+	window.Title = "mahjongg"
 	themeIdx := 0
 	layoutIdx := 0
-	theme := wm.ThemeMap[mahjonggThemeNames[themeIdx]]
+	theme := wm.GetTheme(mahjonggThemeNames[themeIdx])
 
 	var board [][][]*mahjonggBrick
 	var selected *mahjonggBrick
@@ -689,7 +696,7 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 	// Cycle theme
 	cycleTheme := func() {
 		themeIdx = (themeIdx + 1) % len(mahjonggThemeNames)
-		theme = wm.ThemeMap[mahjonggThemeNames[themeIdx]]
+		theme = wm.GetTheme(mahjonggThemeNames[themeIdx])
 
 		container.Style("backgroundColor", theme["faded"])
 		timerElem.Style("color", theme["vivid"])

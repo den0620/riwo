@@ -29,48 +29,15 @@ var (
 	WindowCount      int       // Counter for creating multiple windows with unique z-index
 	HighestZIndex    int  = 10 // Track the highest z-index for bringing windows to front
 	Verbose          bool = false
-	ThemeMap              = map[string]map[string]string{
-		"monochrome": {
-			"faded":  "#ffffff",
-			"normal": "#777777",
-			"vivid":  "#000000",
-		},
-		"red": {
-			"faded":  "#ffeaea",
-			"normal": "#df9595",
-			"vivid":  "#bb5d5d",
-		},
-		"green": {
-			"faded":  "#eaffea",
-			"normal": "#88cc88",
-			"vivid":  "#448844",
-		},
-		"blue": {
-			"faded":  "#c0eaff",
-			"normal": "#00aaff",
-			"vivid":  "#0088cc",
-		},
-		"yellow": {
-			"faded":  "#ffffea",
-			"normal": "#eeee9e",
-			"vivid":  "#99994c",
-		},
-		"aqua": {
-			"faded":  "#eaffff",
-			"normal": "#9eeeee",
-			"vivid":  "#8888cc",
-		},
-		"gray": {
-			"faded":  "#eeeeee",
-			"normal": "#cccccc",
-			"vivid":  "#888888",
-		},
-	}
 )
 
-func Print(value string) {
+// / JSLog prints the string in JS console (if flag verbose was enabled)
+func JSLog(value string) {
 	if Verbose {
-		js.Global().Get("console").Call("log", value)
+		js.
+			Global().
+			Get("console").
+			Call("log", value)
 	}
 }
 func Ftoa(value float64) string {

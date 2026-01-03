@@ -1,8 +1,8 @@
 # This script compiles module to WASM but uses under Windows NT
-# My test release named Frank Iero.
+# My test release named Bryan Molko.
 function Invoke-GoWasmBuild {
     param(
-        [string]$OutputPath = "build/frank_iero/main.wasm"
+        [string]$OutputPath = "build/bryan_molko/main.wasm"
     )
     $oldGOOS = $env:GOOS
     $oldGOARCH = $env:GOARCH
