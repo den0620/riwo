@@ -32,59 +32,92 @@
 <script>
     require.config({
         paths: {
-            'vs': new URL('./min/vs', window.location).href,
-            'markdown': './min/vs/basic-languages/markdown/markdown.js'
+            'vs': new URL('./min/vs', window.location).href
         }
     });
 
     let editor;
+    let isInitializing = false;
     let isInitialized = false;
+    let pendingUpdate = null;
 
     function initMonaco() {
-        if (isInitialized) return;
+        if (isInitialized || isInitializing) {
+            return Promise.resolve(editor);
+        }
+
+        isInitializing = true;
         
-        require(['vs/editor/editor.main'], function() {
-            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'vs-dark' : 'vs-light';
-            
-            editor = monaco.editor.create(document.getElementById('editor'), {
-                value: '// Fetching results...\n',
-                language: 'go',
-                theme: systemTheme,
-                automaticLayout: true,
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false
+        return new Promise((resolve, reject) => {
+            require([
+                'vs/editor/editor.main'
+            ], function() {
+                if (isInitialized) {
+                    resolve(editor);
+                    return;
+                }
+
+                const editorElement = document.getElementById('editor');
+                
+                editorElement.innerHTML = '';
+                
+                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches 
+                    ? 'vs-dark' 
+                    : 'vs-light';
+                
+                try {
+                    editor = monaco.editor.create(editorElement, {
+                        value: '// Ready\n',
+                        language: 'go',
+                        theme: systemTheme,
+                        automaticLayout: true,
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false
+                    });
+
+                    isInitialized = true;
+                    isInitializing = false;
+                    console.log('Monaco initialized');
+
+                    if (pendingUpdate) {
+                        updateContent(pendingUpdate.content, pendingUpdate.language);
+                        pendingUpdate = null;
+                    }
+
+                    resolve(editor);
+                } catch (e) {
+                    isInitializing = false;
+                    console.error('Monaco init error:', e);
+                    reject(e);
+                }
             });
-
-            //editor.onDidChangeModelContent(updatePreview);
-            //updatePreview();
-
-            isInitialized = true;
-            console.log('Monaco initialized');
         });
     }
 
     function updateContent(content, language) {
         if (!isInitialized) {
             console.warn('Editor not initialized yet');
-            setTimeout(() => updateContent(content, language), 500);
+            pendingUpdate = { content, language };
             initMonaco();
             return;
         }
 
         try {
-            editor.setValue(content || '');
-            const model = editor.getModel();
-            if (model && language) {
-                monaco.editor.setModelLanguage(model, language);
+            if (content !== undefined) {
+                editor.setValue(content || '');
             }
-            // preview unavailable at the moment :(
+            if (language) {
+                const model = editor.getModel();
+                if (model) {
+                    monaco.editor.setModelLanguage(model, language);
+                }
+            }
         } catch (e) {
             console.error('Update error:', e);
         }
-
-        
     }
-updateContent();
+
+    initMonaco();
 </script>
 </body>
 </html>

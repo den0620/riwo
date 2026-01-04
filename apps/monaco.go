@@ -10,7 +10,6 @@ func init() {
 }
 
 func monacoConstruct(window *wm.RiwoWindow) {
-	// +++ .gitignore: Monaco path
 	window.Title = "Monaco Editor (minimal)"
 
 	// Bad idea...
@@ -21,13 +20,16 @@ func monacoConstruct(window *wm.RiwoWindow) {
 		Style("height", "100%").
 		Style("border", "none")
 
-	window.Content.Listen("load", func(this js.Value, args []js.Value) interface{} {
-		iframe.DOM().Call("contentWindow").Call("postMessage",
-			js.ValueOf(map[string]interface{}{
-				"type":     "init",
-				"content":  "", // <-- string expected
-				"language": "markdown",
-			}), "*")
+	iframe.Listen("load", func(this js.Value, args []js.Value) interface{} {
+		contentWindow := iframe.DOM().Get("contentWindow")
+		if contentWindow.Truthy() {
+			contentWindow.Call("postMessage",
+				js.ValueOf(map[string]interface{}{
+					"type":     "init",
+					"content":  "", // <-- string expected
+					"language": "markdown",
+				}), "*")
+		}
 		return nil
 	})
 
@@ -35,3 +37,4 @@ func monacoConstruct(window *wm.RiwoWindow) {
 		Inner("").
 		Append(iframe)
 }
+
