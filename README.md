@@ -37,9 +37,9 @@ I would like to see any contribution
 - [x] Clock (`ZClock`)
 - [x] Audio player (`DPlayer`)
 - [x] Mahjongg (`Mahjongg`)
+- [x] Monaco Editor (`Monaco`)
 - [ ] Manual (`RTFM`)
 - [ ] Gallery (`?`)
-- [ ] Monaco Editor (`?`)
 - [ ] Drawterm (`?`)
 - [ ] Doom (`Doom`?)
 - [ ] BoxedWine (`?`)
@@ -59,6 +59,8 @@ Mahjongg has no plan9-ish cursor for cursor "not allowed"
 
 Mahjongg may not fit in phone's screen
 
+Monaco doesn't work non-locally on non-chromium browsers
+
 <a href="https://star-history.com/#den0620/riwo&Date">
     <picture>
         <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=den0620/riwo&type=Date&theme=dark" />
@@ -66,3 +68,17 @@ Mahjongg may not fit in phone's screen
         <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=den0620/riwo&type=Date" />
     </picture>
 </a>
+
+## Building
+
+```shell
+# Default build (outputs to build/main.wasm)
+make all
+
+# Custom output path
+make all OUTPUT=build/example_dir/main.wasm
+
+# Remove build
+make clean
+```
+
