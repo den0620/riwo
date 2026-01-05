@@ -431,11 +431,12 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		Style("flexDirection", "column").
 		Style("justifyContent", "center").
 		Style("alignItems", "center").
-		Style("backgroundColor", theme["faded"])
+		Style("backgroundColor", theme["faded"]).
+		Style("object-fit", "fill")
 
 	timerElem := wm.Create().
 		Text("Time: 0:00").
-		Style("marginBottom", "1rem").
+		Style("marginBottom", "0.5rem").
 		Style("color", theme["vivid"]).
 		Style("fontWeight", "bold")
 
