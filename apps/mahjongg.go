@@ -433,7 +433,7 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		Style("alignItems", "center").
 		Style("backgroundColor", theme["faded"]).
 		Style("object-fit", "fill").
-		Style("font-size", "0.8rem")
+		Style("font-size", "0.8em")
 
 	timerElem := wm.Create().
 		Text("Time: 0:00").
@@ -635,8 +635,8 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 	createBrickElement := func(brick *mahjonggBrick) {
 		symbol := mahjonggGetTileEmoji(brick.typ)
 
-		left := float64(brick.col)*2.5 + float64(brick.layer)*0.25
-		top := float64(brick.row)*3.125 - float64(brick.layer)*0.25
+		left := float64(brick.col)*1.5 + float64(brick.layer)*0.15
+		top := float64(brick.row)*2.25 - float64(brick.layer)*0.15
 		zindex := brick.layer*100 + brick.row
 
 		elem := wm.Create().
@@ -645,8 +645,8 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 			Style("left", strconv.FormatFloat(left, 'f', 3, 64)+"em").
 			Style("top", strconv.FormatFloat(top, 'f', 3, 64)+"em").
 			Style("zIndex", strconv.Itoa(zindex)).
-			Style("width", "2em").
-			Style("height", "3em").
+			Style("width", "1em").
+			Style("height", "1.5em").
 			Style("display", "flex").
 			Style("justifyContent", "center").
 			Style("alignItems", "center").
