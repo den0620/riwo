@@ -59,8 +59,6 @@ Mahjongg has no plan9-ish cursor for cursor "not allowed"
 
 Mahjongg may not fit in phone's screen
 
-Monaco doesn't work non-locally on non-chromium browsers
-
 <a href="https://star-history.com/#den0620/riwo&Date">
     <picture>
         <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=den0620/riwo&type=Date&theme=dark" />
