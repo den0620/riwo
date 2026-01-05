@@ -651,10 +651,10 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 			Style("alignItems", "center").
 			Style("fontSize", "1.5rem").
 			Style("backgroundColor", theme["normal"]).
-			Style("border", "0.125rem solid "+theme["vivid"]).
+			Style("border", "0.125em solid "+theme["vivid"]).
 			Style("cursor", wm.CursorInvertUrl).
 			Style("userSelect", "none").
-			Style("boxShadow", "0.125rem 0.125rem 0.25rem rgba(0,0,0,0.3)")
+			Style("boxShadow", "0.125em 0.125em 0.25em rgba(0,0,0,0.3)")
 
 		brick.elem = elem
 
@@ -712,7 +712,7 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 						} else {
 							brick.elem.Style("backgroundColor", theme["normal"])
 						}
-						brick.elem.Style("border", "0.125rem solid "+theme["vivid"])
+						brick.elem.Style("border", "0.125em solid "+theme["vivid"])
 					}
 				}
 			}
