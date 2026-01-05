@@ -444,8 +444,8 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 	boardElem := wm.Create().
 		Style("position", "relative").
 		Style("display", "inline-block").
-		Style("width", "36rem").
-		Style("height", "26rem")
+		Style("width", "36em").
+		Style("height", "26em")
 
 	container.Append(timerElem, boardElem)
 	window.Content.Inner("").Append(container)
@@ -642,15 +642,15 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		elem := wm.Create().
 			Text(symbol).
 			Style("position", "absolute").
-			Style("left", strconv.FormatFloat(left, 'f', 3, 64)+"rem").
-			Style("top", strconv.FormatFloat(top, 'f', 3, 64)+"rem").
+			Style("left", strconv.FormatFloat(left, 'f', 3, 64)+"em").
+			Style("top", strconv.FormatFloat(top, 'f', 3, 64)+"em").
 			Style("zIndex", strconv.Itoa(zindex)).
-			Style("width", "2rem").
-			Style("height", "3rem").
+			Style("width", "2em").
+			Style("height", "3em").
 			Style("display", "flex").
 			Style("justifyContent", "center").
 			Style("alignItems", "center").
-			Style("fontSize", "1.5rem").
+			Style("fontSize", "1.5em").
 			Style("backgroundColor", theme["normal"]).
 			Style("border", "0.125em solid "+theme["vivid"]).
 			Style("cursor", wm.CursorInvertUrl).
