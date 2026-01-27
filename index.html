@@ -11,7 +11,7 @@
     <meta property="og:title" content="RIO with GO & WASM" />
     <meta property="og:description" content="description idk" />
     <meta property="og:type" content="website" />
-    <script src="go/wasm_exec.js"></script>
+    <script src="build/wasm_exec.js"></script>
     <script>
         const go = new Go();
         WebAssembly.instantiateStreaming(fetch("build/main.wasm"), go.importObject).then((result) => {
