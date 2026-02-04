@@ -71,10 +71,10 @@ Mahjongg may not fit in phone's screen
 
 ```shell
 # Default build (outputs to build/main.wasm)
-make all
+make default
 
-# Custom output path
-make all OUTPUT=build/example_dir/main.wasm
+# Tiny (tinygo) build and custom output path
+make tiny OUTPUT=build/example_dir/main.wasm
 
 # Remove build
 make clean
