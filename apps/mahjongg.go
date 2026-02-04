@@ -437,22 +437,33 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		Style("justifyContent", "center").
 		Style("alignItems", "center").
 		Style("backgroundColor", theme["faded"]).
-		Style("object-fit", "fill")/*.
+		Style("overflow", "hidden")/*.
 		Style("font-size", "0.8em")*/
 
 	timerElem := wm.Create().
 		Text("Time: 0:00").
-		Style("marginBottom", "1em").
+		Style("marginBottom", "0.5em").
+		Style("flex", "0 0 auto").
 		Style("color", theme["vivid"]).
 		Style("fontWeight", "bold")
 
+	boardWrapper := wm.Create().
+		Style("flex", "1").
+		Style("width", "100%").
+		Style("display", "flex").
+		Style("justifyContent", "center").
+		Style("alignItems", "center").
+		Style("container-type", "size")  // enable container queries
+
 	boardElem := wm.Create().
 		Style("position", "relative").
-		Style("display", "inline-block").
-		Style("width", strconv.FormatFloat(mahjonggBoardWidth, 'f', 3, 64) + "em").
-		Style("height", strconv.FormatFloat(mahjonggBoardHeight, 'f', 3, 64) + "em")
+		Style("display", "block").
+		Style("width", strconv.FormatFloat(mahjonggBoardWidth, 'f', 3, 64)+"em").
+		Style("height", strconv.FormatFloat(mahjonggBoardHeight, 'f', 3, 64)+"em").
+		Style("fontSize", "min(3.0cqw, 3.6cqh)")
 
-	container.Append(timerElem, boardElem)
+	boardWrapper.Append(boardElem)
+	container.Append(timerElem, boardWrapper)
 	window.Content.Inner("").Append(container)
 
 	var updateTimer func()
