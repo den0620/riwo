@@ -15,6 +15,11 @@ func init() {
 
 var mahjonggLayoutNames = []string{"Classic", "Fortress", "Arena"}
 var mahjonggThemeNames = []string{"yellow", "blue", "green", "red", "purple", "aqua", "orange", "pink"}
+var mahjonggBrickWidth =   2.00  // Brick dimensions are 2x3
+var mahjonggBrickHeight =  3.00  // / 1.25 => 1.6x2.4
+var mahjonggBrickSpacing = 0.35
+var mahjonggBoardWidth =   (mahjonggBrickWidth + mahjonggBrickSpacing) * 14
+var mahjonggBoardHeight =  (mahjonggBrickHeight + mahjonggBrickSpacing) * 8
 
 type mahjonggBrick struct {
 	typ     int
@@ -432,20 +437,20 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		Style("justifyContent", "center").
 		Style("alignItems", "center").
 		Style("backgroundColor", theme["faded"]).
-		Style("object-fit", "fill").
-		Style("font-size", "0.8em")
+		Style("object-fit", "fill")/*.
+		Style("font-size", "0.8em")*/
 
 	timerElem := wm.Create().
 		Text("Time: 0:00").
-		Style("marginBottom", "0.5rem").
+		Style("marginBottom", "1em").
 		Style("color", theme["vivid"]).
 		Style("fontWeight", "bold")
 
 	boardElem := wm.Create().
 		Style("position", "relative").
 		Style("display", "inline-block").
-		Style("width", "36em").
-		Style("height", "26em")
+		Style("width", strconv.FormatFloat(mahjonggBoardWidth, 'f', 3, 64) + "em").
+		Style("height", strconv.FormatFloat(mahjonggBoardHeight, 'f', 3, 64) + "em")
 
 	container.Append(timerElem, boardElem)
 	window.Content.Inner("").Append(container)
@@ -498,16 +503,16 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 			Style("top", "50%").
 			Style("left", "50%").
 			Style("transform", "translate(-50%, -50%)").
-			Style("fontSize", "2rem").
+			Style("fontSize", "2em").
 			Style("fontWeight", "bold").
 			Style("color", theme["vivid"]).
 			Style("backgroundColor", theme["normal"]).
-			Style("padding", "1.25rem 2.5rem").
-			Style("borderRadius", "0.625rem").
-			Style("border", "0.1875rem solid "+theme["vivid"]).
+			Style("padding", "1.25em 2.5em").
+			Style("borderRadius", "0.625em").
+			Style("border", "0.1875em solid "+theme["vivid"]).
 			Style("textAlign", "center").
 			Style("whiteSpace", "pre-line").
-			Style("boxShadow", "0 0.25rem 0.5rem rgba(0,0,0,0.3)").
+			Style("boxShadow", "0 0.25em 0.5em rgba(0,0,0,0.3)").
 			Style("zIndex", "1000").
 			Mount(boardElem)
 	}
@@ -564,16 +569,16 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 				Style("top", "50%").
 				Style("left", "50%").
 				Style("transform", "translate(-50%, -50%)").
-				Style("fontSize", "2rem").
+				Style("fontSize", "2em").
 				Style("fontWeight", "bold").
 				Style("color", theme["vivid"]).
 				Style("backgroundColor", theme["normal"]).
-				Style("padding", "1.25rem 2.5rem").
-				Style("borderRadius", "0.625rem").
-				Style("border", "0.1875rem solid "+theme["vivid"]).
+				Style("padding", "1.25em 2.5em").
+				Style("borderRadius", "0.625em").
+				Style("border", "0.1875em solid "+theme["vivid"]).
 				Style("textAlign", "center").
 				Style("whiteSpace", "pre-line").
-				Style("boxShadow", "0 0.25rem 0.5rem rgba(0,0,0,0.3)").
+				Style("boxShadow", "0 0.25em 0.5em rgba(0,0,0,0.3)").
 				Style("zIndex", "1000").
 				Mount(boardElem)
 		}
@@ -635,8 +640,8 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 	createBrickElement := func(brick *mahjonggBrick) {
 		symbol := mahjonggGetTileEmoji(brick.typ)
 
-		left := float64(brick.col)*1.5 + float64(brick.layer)*0.15
-		top := float64(brick.row)*2.25 - float64(brick.layer)*0.15
+		left := float64(brick.col)*(mahjonggBrickWidth + mahjonggBrickSpacing) + float64(brick.layer)*mahjonggBrickSpacing
+		top := float64(brick.row)*(mahjonggBrickHeight + mahjonggBrickSpacing) - float64(brick.layer)*mahjonggBrickSpacing
 		zindex := brick.layer*100 + brick.row
 
 		elem := wm.Create().
@@ -645,12 +650,12 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 			Style("left", strconv.FormatFloat(left, 'f', 3, 64)+"em").
 			Style("top", strconv.FormatFloat(top, 'f', 3, 64)+"em").
 			Style("zIndex", strconv.Itoa(zindex)).
-			Style("width", "1em").
-			Style("height", "1.5em").
+			Style("width", strconv.FormatFloat(mahjonggBrickWidth, 'f', 3, 64) + "em").
+			Style("height", strconv.FormatFloat(mahjonggBrickHeight, 'f', 3, 64) + "em").
 			Style("display", "flex").
 			Style("justifyContent", "center").
 			Style("alignItems", "center").
-			Style("fontSize", "1.5em").
+			//Style("fontSize", "1.90em").
 			Style("backgroundColor", theme["normal"]).
 			Style("border", "0.125em solid "+theme["vivid"]).
 			Style("cursor", wm.CursorInvertUrl).
