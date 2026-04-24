@@ -6,7 +6,7 @@ and its functions + listeners
 package wm
 
 import (
-	"fmt"
+	//"fmt"
 	"strconv"
 	"syscall/js"
 )
@@ -69,7 +69,8 @@ func createWindow(p *windowPlacement, content string) *RiwoWindow {
 	window := &RiwoWindow{
 		ID:      id,
 		Content: windowContent,
-		Title:   fmt.Sprintf(" (wid=%d)", id),
+		Title:   " (wid=" + strconv.Itoa(id) + ")",
+		//Title:   fmt.Sprintf(" (wid=%d)", id),
 		// No custom ContextEntries
 	}
 
@@ -143,7 +144,7 @@ func createWindow(p *windowPlacement, content string) *RiwoWindow {
 				IsHiding = false
 
 				// prepare menu item
-				hiddenWindowOption := CreateMenuObject(fmt.Sprintf("%s (#%d)", window.Title, window.ID))
+				hiddenWindowOption := CreateMenuObject(window.Title + " (#" + strconv.Itoa(window.ID) + ")")
 
 				if windowContent.From("title").String() != "" {
 					hiddenWindowOption = CreateMenuObject(windowContent.From("title").String())
