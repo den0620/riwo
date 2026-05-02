@@ -1,13 +1,13 @@
 package main
 
 import (
-	"riwo/apps"
 	"riwo/wm"
 	"strconv"
 	"syscall/js"
 )
 
-func Logging(this js.Value, args []js.Value) interface{} {
+
+func logging(this js.Value, args []js.Value) interface{} {
 	wm.Verbose = !wm.Verbose
 	if wm.Verbose {
 		js.Global().Get("console").Call("log", "Logging is now ON")
@@ -17,32 +17,27 @@ func Logging(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
-func LaunchDefault(this js.Value, args []js.Value) interface{} {
+func launchDefault(this js.Value, args []js.Value) interface{} {
 	if len(args) != 1 {
-		return "Expected one integer (window id)" // No or too many args
+		return "Expected one integer (window id)"
 	}
-	jsNum := args[0] // Get the js.Value argument
-
-	if jsNum.Type() != js.TypeNumber { // Check if it's a number
+	jsNum := args[0]
+	if jsNum.Type() != js.TypeNumber {
 		return "Argument must be a number"
 	}
-	num := jsNum.Int() // Convert js.Value to Go int
-
+	num := jsNum.Int()
 	fetchedWindow, ok := wm.AllWindows[strconv.Itoa(num)]
 	if !ok {
-		// Im really not okay (trust me)
-		js.Global().Get("console").Call("log", "Couldn't start APP_default on window "+strconv.Itoa(num))
+		js.Global().Get("console").Call("log", "Couldn't start launchpad on window "+strconv.Itoa(num))
 		return nil
 	}
-
-	apps.Construct(fetchedWindow)
+	wm.OpenLaunchpad(fetchedWindow)
 	return nil
 }
 
 func main() {
 	c := make(chan struct{})
 
-	// Print an introductory message to the browser console.
 	js.Global().Get("console").Call("log", `
 Great, You've found yourself in the console
 Then you are likely to want to know this:
@@ -57,17 +52,13 @@ For logging there are:
 + Logging()
 `)
 
-	// Logging toggler
-	js.Global().Set("Logging", js.FuncOf(Logging))
+	js.Global().Set("Logging", js.FuncOf(logging))
 
 	wm.AllWindows = make(map[string]*wm.RiwoWindow)
 	wm.ContextMenuHides = make([]js.Value, 0)
 
-	// Set default app for window
-	js.Global().Set("LaunchDefault", js.FuncOf(LaunchDefault))
-	// Essential for context menu's "New"
+	js.Global().Set("LaunchDefault", js.FuncOf(launchDefault))
 
-	// Window manager core
 	wm.InitializeContextMenu()
 	wm.InitializeGlobalMouseEvents()
 

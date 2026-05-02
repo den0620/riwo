@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-func init() {
-	AppRegistry["Mahjongg"] = mahjonggConstruct
-	//rand.Seed(time.Now().UnixNano()) // Deprecated as of Go 1.20
-}
 
 var mahjonggLayoutNames = []string{"Classic", "Fortress", "Arena"}
 var mahjonggThemeNames = []string{"yellow", "blue", "green", "red", "purple", "aqua", "orange", "pink"}
@@ -419,7 +415,7 @@ func mahjonggBoardFill(board *[][][]*mahjonggBrick) {
 	mahjonggUpdateBlockedStatus(board)
 }
 
-func mahjonggConstruct(window *wm.RiwoWindow) {
+func MahjonggConstruct(window *wm.RiwoWindow) {
 	window.Title = "mahjongg"
 	themeIdx := 0
 	layoutIdx := 0
@@ -742,12 +738,11 @@ func mahjonggConstruct(window *wm.RiwoWindow) {
 		startGame()
 	}
 
-	// Context Menu
-	window.MenuEntries = []wm.ContextEntry{
+	wm.RegisterGuestContextMenus(window.ID, []wm.GuestMenuEntry{
 		{Name: "New Game", Callback: startGame},
 		{Name: "Cycle Theme", Callback: cycleTheme},
 		{Name: "Cycle Layout", Callback: cycleLayout},
-	}
+	})
 
 	startGame()
 }

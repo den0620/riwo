@@ -193,7 +193,7 @@ func InitializeContextMenu() {
 				CurrentWindow = nil
 			}
 
-			// Append custom context menu entries from the active window, if any.
+			// Append custom context menu entries from the active window, if any (WM wasm only).
 			if ActiveWindow.DOM().Truthy() && CurrentWindow != nil && CurrentWindow.MenuEntries != nil {
 				for _, customOption := range CurrentWindow.MenuEntries {
 					opt := CreateMenuObject(customOption.Name)
@@ -201,11 +201,29 @@ func InitializeContextMenu() {
 						args[0].Call("preventDefault")
 						args[0].Call("stopPropagation")
 						JustSelected = true
-						// Execute default callback for this option.
 						customOption.Callback()
-						ContextMenu.Style("display", "none") // hide menu after click
+						ContextMenu.Style("display", "none")
 						JustSelected = false
 						JSLog("Custom option " + customOption.Name + " called")
+						return nil
+					})
+					ContextMenu.AppendByDom(opt.DOM())
+				}
+			}
+			if ActiveWindow.DOM().Truthy() && CurrentWindow != nil && CurrentWindow.ID >= 1 {
+				wid := CurrentWindow.ID
+				for i, title := range KernelGuestContextMenuTitles(wid) {
+					idx := i
+					menuTitle := title
+					opt := CreateMenuObject(menuTitle)
+					opt.Listen("mousedown", func(this js.Value, args []js.Value) interface{} {
+						args[0].Call("preventDefault")
+						args[0].Call("stopPropagation")
+						JustSelected = true
+						KernelInvokeGuestContextMenu(wid, idx)
+						ContextMenu.Style("display", "none")
+						JustSelected = false
+						JSLog("Guest menu #" + strconv.Itoa(idx) + " (" + menuTitle + ") window " + strconv.Itoa(wid))
 						return nil
 					})
 					ContextMenu.AppendByDom(opt.DOM())

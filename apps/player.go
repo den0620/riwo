@@ -6,10 +6,6 @@ import (
 	"syscall/js"
 )
 
-func init() {
-	AppRegistry["DPlayer"] = PlayerConstruct
-}
-
 func PlayerConstruct(window *wm.RiwoWindow) {
 	fg := wm.GetBorderColorStr("blue")
 	bg := wm.GetBackgroundColorStr("blue")

@@ -29,7 +29,7 @@ I would like to see any contribution
 - [x] Hide
 - [x] Window-specific context menu entries
 - [x] Bearable apps
-- [ ] Make apps load as modules, not monolithic wasm
+- [x] Make apps load as modules, not monolithic wasm
 ### Accessibility
 - [x] Touch adaptation
 ### Default apps
@@ -38,12 +38,12 @@ I would like to see any contribution
 - [x] Audio player (`DPlayer`)
 - [x] Mahjongg (`Mahjongg`)
 - [x] Monaco Editor (`Monaco`)
-- [ ] Manual (`RTFM`)
+- [x] Manual (`RTFM`)
 - [ ] Gallery (`?`)
 - [ ] Drawterm (`?`)
 - [ ] Doom (`Doom`?)
-- [ ] BoxedWine (`?`)
 - [ ] Deus Ex Demo (`DXdemo`?)
+- [ ] BoxedWine (`?`)
 
 ## Possible known issues
 
@@ -51,13 +51,11 @@ Menu opens with single RMB click and NOT hold because I found it simpler
 
 Buttons can be clicked with both RMB and LMB and NOT mousewheel button because I found it simpler
 
-SVG cursors may be junky
-
 If mode was interrupted without mouseup things may brake (I really dont want to fix this)
 
 Mahjongg has no plan9-ish cursor for cursor "not allowed"
 
-Mahjongg may not fit in phone's screen
+Monaco opens 2 context menus: Riwo's one and own one. There is nothing I can think of I can do with that.
 
 <a href="https://star-history.com/#den0620/riwo&Date">
     <picture>
@@ -73,8 +71,8 @@ Mahjongg may not fit in phone's screen
 # Default build (outputs to build/main.wasm)
 make default
 
-# Tiny (tinygo) build and custom output path
-make tiny OUTPUT=build/example_dir/main.wasm
+# Tiny (tinygo) build
+make tiny
 
 # Remove build
 make clean

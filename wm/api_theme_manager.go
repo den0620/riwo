@@ -58,14 +58,18 @@ func GetBorderColorStr(key string) string {
 }
 
 func ApplyThemeToWindow(window *RiwoWindow, key string) {
-	// extract the colors
 	bg := themeMap[key]["faded"]
 	mg := themeMap[key]["vivid"]
-	// fg := wm.themeMap["green"]["normal"]
-	window.Content.
-		Style("background", bg). // <-- apply the borders/foreground font style
-		Style("borderColor", mg)
-
+	if window.Frame != nil && window.Frame.DOM().Truthy() {
+		window.Frame.
+			Style("background", bg).
+			Style("borderColor", mg)
+	}
+	if window.Content != nil && window.Content.DOM().Truthy() {
+		window.Content.
+			Style("background", bg).
+			Style("borderColor", mg)
+	}
 }
 
 func ApplyThemeToObject(object *RiwoObject, key string) {

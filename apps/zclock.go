@@ -6,11 +6,7 @@ import (
 	"syscall/js"
 )
 
-func init() {
-	AppRegistry["ZClock"] = clockConstruct
-}
-
-func clockConstruct(window *wm.RiwoWindow) {
+func ZClockConstruct(window *wm.RiwoWindow) {
 	window.Title = "ZClock"
 
 	//fg := wm.ThemeMap["aqua"]["normal"] // not used so compiler will shit its pants
@@ -103,7 +99,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 		applyThemeToButton(themeButton, theme)
 
 		out := func(this js.Value, args []js.Value) interface{} {
-			themeButton.Style("backgroundColor", wm.GetBorderColorStr(key))
+			themeButton.Style("backgroundColor", wm.GetBackgroundColorStr(key))
 			return nil
 		}
 		over := func(this js.Value, args []js.Value) interface{} {
@@ -201,7 +197,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 
 	isSettingsShown := false
 
-	window.MenuEntries = []wm.ContextEntry{
+	wm.RegisterGuestContextMenus(window.ID, []wm.GuestMenuEntry{
 		{
 			Name: "Settings",
 			Callback: func() {
@@ -216,7 +212,7 @@ func clockConstruct(window *wm.RiwoWindow) {
 				wm.JSLog("zclock settings toggled: " + strconv.FormatBool(isSettingsShown))
 			},
 		},
-	}
+	})
 	utc.Append(utcHourDecrase, utcInput, utcHourIncrase)
 	settingsUtc.Append(utcLabel, utc)
 
