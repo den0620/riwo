@@ -1,0 +1,5 @@
+{
+	"launchName": "Monaco",
+	"runtime": "js-mount",
+	"jsModule": "assets/js-mounts/monaco-mount.js"
+}

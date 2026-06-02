@@ -2,13 +2,18 @@ package wm
 
 import "syscall/js"
 
-// RunGuestApp runs constructor with window content bound to __riwoGuestBootstrap.pane from the JS kernel
-// Blocks forever like the wm main goroutine pattern.
+// RunGuestApp consumes the one pending Go-guest bootstrap latch from the JS kernel, then runs the app.
 func RunGuestApp(run func(*RiwoWindow)) {
-	c := make(chan struct{})
-	b := js.Global().Get("__riwoGuestBootstrap")
-	pane := b.Get("pane")
-	wid := b.Get("windowId").Int()
+	k := js.Global().Get("__riwoKernel")
+	if !k.Truthy() {
+		return
+	}
+	boot := k.Call("consumeGuestBootstrap")
+	if !boot.Truthy() || boot.Type() == js.TypeNull || boot.Type() == js.TypeUndefined {
+		return
+	}
+	wid := boot.Get("windowId").Int()
+	pane := boot.Get("pane")
 	pj := pane
 	content := CreateFrom(&pj)
 	rw := &RiwoWindow{
@@ -17,5 +22,5 @@ func RunGuestApp(run func(*RiwoWindow)) {
 		Title:   "",
 	}
 	run(rw)
-	<-c
+	select {}
 }

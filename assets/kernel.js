@@ -1,20 +1,12 @@
 'use strict';
 
 (function () {
-	/** Wasm paths resolved relative to the page (same folder as index.html by default). */
-	const GUEST_WASM = Object.freeze({
-		ZClock: 'build/zclock.wasm',
-		DPlayer: 'build/dplayer.wasm',
-		Mahjongg: 'build/mahjongg.wasm',
-		RTFM: 'build/rtfm.wasm',
-		Monaco: 'build/monaco.wasm'
-	});
+	/** Fallback if generated manifest not loaded yet (run `make` / guestgen first). */
+	const FALLBACK_GUESTS = [];
 
-	/** Best-effort tracking of guest goroutines keyed by wm window id. */
-	const guests = new Map();
+	const guestsTracking = new Map();
 
 	/** @typedef {{ name: string, fn: any }} GuestMenuRow */
-	/** Guest context menu callbacks live in JS so WM wasm can trigger them cross-instance. */
 	/** @type {Map<number, GuestMenuRow[]>} */
 	const guestContextMenusByWindow = new Map();
 
@@ -35,7 +27,6 @@
 		return rows.map((r) => r.name);
 	}
 
-	/** Go syscall/js.Func appears in JS as a plain function (wasm_exec `_makeFuncWrapper`), not `{ Invoke }`. */
 	function invokeGoWasmCallback(fn) {
 		if (typeof fn === 'function') {
 			return fn();
@@ -59,7 +50,7 @@
 	}
 
 	function disposeGuestForWindow(windowId) {
-		guests.delete(Number(windowId));
+		guestsTracking.delete(Number(windowId));
 		guestContextMenuClear(windowId);
 	}
 
@@ -67,133 +58,179 @@
 		return new URL(path, document.baseURI).href;
 	}
 
+	function readGuestManifestRecords() {
+		const m = globalThis.__RIWO_GENERATED_MANIFEST;
+		const list = Array.isArray(m?.guests) ? m.guests : FALLBACK_GUESTS;
+		return list;
+	}
+
+	function manifestByLaunchName() {
+		/** @type {Map<string, any>} */
+		const map = new Map();
+		for (const row of readGuestManifestRecords()) {
+			if (!row.launchName || !row.runtime) {
+				continue;
+			}
+			map.set(String(row.launchName), row);
+		}
+		return map;
+	}
+
 	function listGuestApps() {
-		return Object.keys(GUEST_WASM).slice().sort();
+		return readGuestManifestRecords()
+			.map((r) => r.launchName)
+			.filter(Boolean)
+			.sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }));
 	}
 
-	function loaderScriptLoaded(src) {
-		return Array.from(document.scripts).some((s) => s.src === src);
-	}
+	/** One guest spawn at a time; avoids races on latch + Go startup. */
+	let spawnChain = Promise.resolve();
 
-	function loadScriptOnce(src) {
-		const abs = resolveURL(src);
-		if (loaderScriptLoaded(abs)) {
-			return Promise.resolve();
-		}
-		return new Promise((resolve, reject) => {
-			const script = document.createElement('script');
-			script.src = abs;
-			script.onload = () => resolve();
-			script.onerror = () => reject(new Error('Failed to load ' + abs));
-			document.head.appendChild(script);
+	function enqueueSpawn(fn) {
+		spawnChain = spawnChain.then(fn).catch((e) => {
+			console.error('[riwo kernel] spawn error:', e);
 		});
+		return spawnChain;
 	}
 
-	/**
-	 * Mount Monaco Editor into hostEl (fills host). Loads AMD loader from apps/Monaco once.
-	 */
-	async function monacoMount(hostEl) {
-		hostEl.replaceChildren();
+	/** Pending Go guest reads bootstrap via consumeGuestBootstrap (sync Go main startup). */
+	let guestBootstrapThunk = null;
+	let guestBootstrapResolve = null;
+	let goBootstrapWatchdog = null;
 
-		const wrap = document.createElement('div');
-		wrap.style.width = '100%';
-		wrap.style.height = '100%';
-		wrap.style.margin = '0';
-		wrap.style.padding = '0';
-		wrap.style.overflow = 'hidden';
+	function consumeGuestBootstrap() {
+		if (typeof guestBootstrapThunk !== 'function') {
+			return null;
+		}
+		const out = guestBootstrapThunk();
+		guestBootstrapThunk = null;
+		if (goBootstrapWatchdog !== null) {
+			clearTimeout(goBootstrapWatchdog);
+			goBootstrapWatchdog = null;
+		}
+		if (typeof guestBootstrapResolve === 'function') {
+			const r = guestBootstrapResolve;
+			guestBootstrapResolve = null;
+			r();
+		}
+		return out;
+	}
 
-		const container = document.createElement('div');
-		container.style.width = '100%';
-		container.style.height = '100%';
+	async function runGoGuest(manifestRow, wid, pane) {
+		disposeGuestForWindow(wid);
+		pane.replaceChildren();
 
-		const editor = document.createElement('div');
-		editor.id = 'riwo-monaco-' + Date.now().toString(36);
-		editor.style.width = '100%';
-		editor.style.height = '100%';
-
-		container.appendChild(editor);
-		wrap.appendChild(container);
-		hostEl.appendChild(wrap);
-
-		await loadScriptOnce('apps/Monaco/min/vs/loader.js');
-
-		await new Promise((resolve, reject) => {
-			if (typeof window.require !== 'function' || typeof window.require.config !== 'function') {
-				reject(new Error('Monaco loader (require) is not available'));
-				return;
-			}
-			const vsHref = resolveURL('apps/Monaco/min/vs');
-
-			window.require.config({
-				paths: { vs: vsHref },
-				catchError: true
+		await new Promise((resolveBootstrap, rejectBootstrap) => {
+			guestBootstrapThunk = () => ({
+				windowId: Number(wid),
+				pane
 			});
+			guestBootstrapResolve = resolveBootstrap;
 
-			window.require(['vs/editor/editor.main'], function () {
-				try {
-					const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-					window.monaco.editor.create(editor, {
-						value: '// Ready\n',
-						language: 'go',
-						theme: dark ? 'vs-dark' : 'vs-light',
-						automaticLayout: true,
-						minimap: { enabled: false },
-						scrollBeyondLastLine: false
-					});
-				} catch (e) {
-					reject(e);
-					return;
+			goBootstrapWatchdog = setTimeout(() => {
+				if (typeof guestBootstrapThunk === 'function') {
+					console.error(
+						'[riwo kernel] Go guest did not call consumeGuestBootstrap (RunGuestApp must run first); unblocking spawn queue'
+					);
+					guestBootstrapThunk = null;
+					guestBootstrapResolve = null;
+					goBootstrapWatchdog = null;
+					rejectBootstrap(new Error('consumeGuestBootstrap watchdog'));
 				}
-				resolve();
-			});
+			}, 15000);
+
+			void (async () => {
+				try {
+					const go = new Go();
+					const res = await WebAssembly.instantiateStreaming(
+						fetch(resolveURL(manifestRow.wasm)),
+						go.importObject
+					);
+					guestsTracking.set(Number(wid), {
+						wasmPath: manifestRow.wasm,
+						runtime: 'go',
+						windowId: wid
+					});
+					void go.run(res.instance);
+				} catch (e) {
+					if (goBootstrapWatchdog !== null) {
+						clearTimeout(goBootstrapWatchdog);
+						goBootstrapWatchdog = null;
+					}
+					guestBootstrapThunk = null;
+					guestBootstrapResolve = null;
+					rejectBootstrap(e);
+				}
+			})();
 		});
 	}
 
-	/**
-	 * Same as monacoMount but invokes onDone JS function once editor is ready (or on error — still invokes).
-	 */
-	function monacoMountDone(hostEl, onDoneJs) {
-		monacoMount(hostEl).then(
-			() => {
-				invokeGoWasmCallback(onDoneJs);
-			},
-			(err) => {
-				console.error(err);
-				invokeGoWasmCallback(onDoneJs);
-			}
-		);
+	async function runJsMountGuest(jsModuleRel, manifestRow, wid, pane) {
+		disposeGuestForWindow(wid);
+		pane.replaceChildren();
+
+		const mod = await import(resolveURL(jsModuleRel));
+		const fn = typeof mod.mount === 'function' ? mod.mount : typeof mod.default === 'function' ? mod.default : null;
+
+		if (typeof fn !== 'function') {
+			throw new Error('JS mount module exports no mount() — require export async function mount(host, ctx)');
+		}
+
+		await fn(pane, { windowId: Number(wid), launchName: manifestRow.launchName, kernel: minimalKernelAPI() });
+		guestsTracking.set(Number(wid), { runtime: 'js-mount', windowId: wid, module: jsModuleRel });
 	}
 
-	async function spawnGuestApp(appName, windowId, contentHostJsValue) {
-		const wasmRel = GUEST_WASM[appName];
-		if (!wasmRel) {
-			console.warn('[riwo kernel] Unknown guest:', appName);
-			return;
+	function minimalKernelAPI() {
+		return {
+			resolveURL,
+			disposeGuestForWindow
+		};
+	}
+
+	async function runRawWasmGuest(wasmPath, wid, pane) {
+		disposeGuestForWindow(wid);
+		pane.replaceChildren();
+
+		const res = await WebAssembly.instantiateStreaming(fetch(resolveURL(wasmPath)), {});
+		const ex = res.instance.exports;
+		if (typeof ex._start === 'function') {
+			ex._start();
+		} else if (typeof ex.main === 'function') {
+			ex.main();
 		}
+		guestsTracking.set(Number(wid), { runtime: 'wasm-raw', windowId: wid, wasmPath });
+	}
+
+	function spawnGuestApp(appName, windowId, contentHostJsValue) {
 		if (!contentHostJsValue || typeof contentHostJsValue.replaceChildren !== 'function') {
 			console.warn('[riwo kernel] Invalid content host element');
-			return;
+			return Promise.resolve();
 		}
-		disposeGuestForWindow(windowId);
-		contentHostJsValue.replaceChildren();
-
-		globalThis.__riwoGuestBootstrap = {
-			windowId: Number(windowId),
-			pane: contentHostJsValue
-		};
-
-		try {
-			const go = new Go();
-			const res = await WebAssembly.instantiateStreaming(
-				fetch(resolveURL(wasmRel)),
-				go.importObject
-			);
-			guests.set(Number(windowId), { wasmPath: wasmRel, windowId });
-			go.run(res.instance);
-		} catch (e) {
-			console.error('[riwo kernel] spawnGuestApp:', appName, e);
-			guests.delete(Number(windowId));
+		const byName = manifestByLaunchName();
+		const row = byName.get(String(appName));
+		if (!row) {
+			console.warn('[riwo kernel] Unknown guest:', appName);
+			return Promise.resolve();
 		}
+
+		return enqueueSpawn(async () => {
+			const wid = Number(windowId);
+			const pane = contentHostJsValue;
+
+			switch (row.runtime) {
+				case 'go':
+					await runGoGuest(row, wid, pane);
+					return;
+				case 'js-mount':
+					await runJsMountGuest(row.jsModule, row, wid, pane);
+					return;
+				case 'wasm-raw':
+					await runRawWasmGuest(row.wasm, wid, pane);
+					return;
+				default:
+					console.warn('[riwo kernel] Unsupported runtime', row.runtime);
+			}
+		});
 	}
 
 	async function startWM(wasmRel) {
@@ -213,8 +250,7 @@
 		guestContextMenuAppend,
 		guestContextMenuTitles,
 		guestContextMenuInvoke,
-		monacoMount,
-		monacoMountDone,
+		consumeGuestBootstrap,
 		startWM
 	};
 

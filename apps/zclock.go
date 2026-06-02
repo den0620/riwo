@@ -153,7 +153,9 @@ func ZClockConstruct(window *wm.RiwoWindow) {
 	}
 	incrClick := func(this js.Value, args []js.Value) interface{} {
 		current, _ := strconv.Atoi(utcInput.DOM().Get("textContent").String())
-		if current > -12 {
+		// IANA-style offsets are roughly −12 … +14; the old guard `current > −12`
+		// blocked increment when sitting exactly at −12.
+		if current < 14 {
 			utcInput.Text(strconv.Itoa(current + 1))
 		}
 		return nil

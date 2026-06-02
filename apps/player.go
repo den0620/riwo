@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"riwo/audiometa"
 	"riwo/wm"
 	"strconv"
 	"syscall/js"
@@ -27,7 +28,16 @@ func PlayerConstruct(window *wm.RiwoWindow) {
 		Text("00:00 | 00:00").
 		Style("color", fg).
 		Style("textAlign", "center").
-		Style("marginBottom", "10px")
+		Style("marginBottom", "6px")
+
+	metaDisplay := wm.
+		Create().
+		Text("").
+		Style("color", mg).
+		Style("textAlign", "center").
+		Style("marginBottom", "10px").
+		Style("minHeight", "1.2em").
+		Style("fontSize", "15px")
 
 	controls := wm.
 		Create().
@@ -158,13 +168,55 @@ func PlayerConstruct(window *wm.RiwoWindow) {
 	}
 	fileInputChange := func(this js.Value, args []js.Value) interface{} {
 		files := fileInput.DOM().Get("files")
-		if files.Length() > 0 {
-			file := files.Index(0)
-			url := js.Global().Get("URL").Call("createObjectURL", file)
-			audio.DOM().Set("src", url)
-			fileStatus.Text(":: " + file.Get("name").String())
-			playButton.Text("[|>]")
+		if files.Length() == 0 {
+			return nil
 		}
+		file := files.Index(0)
+		name := file.Get("name").String()
+		url := js.Global().Get("URL").Call("createObjectURL", file)
+		audio.DOM().Set("src", url)
+		fileStatus.Text(":: " + name)
+		metaDisplay.Text("")
+		playButton.Text("[|>]")
+
+		fr := js.Global().Get("FileReader").New()
+		var onLoaded js.Func
+		onLoaded = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+			defer onLoaded.Release()
+			ab := fr.Get("result")
+			if !ab.Truthy() {
+				return nil
+			}
+			n := ab.Get("byteLength").Int()
+			if n <= 0 || n > 40*1024*1024 {
+				return nil
+			}
+			buf := make([]byte, n)
+			js.CopyBytesToGo(buf, js.Global().Get("Uint8Array").New(ab))
+			title, artist, album := audiometa.ParseTags(buf)
+			line := ""
+			switch {
+			case artist != "" && title != "":
+				line = artist + " - " + title
+			case title != "":
+				line = title
+			case artist != "":
+				line = artist
+			}
+			if album != "" {
+				if line != "" {
+					line += " (" + album + ")"
+				} else {
+					line = album
+				}
+			}
+			if line != "" {
+				metaDisplay.Text(line)
+			}
+			return nil
+		})
+		fr.Set("onload", onLoaded)
+		fr.Call("readAsArrayBuffer", file)
 		return nil
 	}
 
@@ -180,7 +232,7 @@ func PlayerConstruct(window *wm.RiwoWindow) {
 	controls.Append(prevButton, playButton, nextButton)
 	controls2.Append(volDnButton, volUpButton, fileButton)
 
-	container.Append(timeDisplay, controls, fileStatus, controls2, fileInput, audio)
+	container.Append(timeDisplay, metaDisplay, controls, fileStatus, controls2, fileInput, audio)
 
 	window.Content.
 		Inner("").
