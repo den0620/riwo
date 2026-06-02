@@ -68,13 +68,23 @@ Monaco opens 2 context menus: Riwo's one and own one. There is nothing I can thi
 ## Building
 
 ```shell
-# Default build (outputs to build/main.wasm)
+# Default build (outputs to build/wm.wasm + build/<guest>.wasm)
 make default
 
 # Tiny (tinygo) build
 make tiny
 
-# Remove build
+# Remove build artifacts
 make clean
 ```
 
+## Documentation
+
+Architecture and contributor-facing detail live in [DOCS.md](DOCS.md). It covers:
+
+- **Layout** - `entry/wm`, `entry/guest/<name>/`, `wm/`, `apps/`, `assets/kernel.js`, `tools/guestgen`
+- **Guest runtimes** - Go wasm, **`js-mount`** (Monaco), and experimental **`wasm-raw`**, driven by **`guest.manifest.json`** and **`assets/generated-manifest.js`**
+- **`__riwoKernel`** - spawn queue, bootstrap handoff, guest context menus
+- **Build & dev** - `make` targets, guestgen stamp
+- **Adding a guest** - step-by-step for Go wasm and js-mount apps
+- **App notes** - DPlayer tag parsing (`audiometa/`), ZClock UTC offset, known limitations
